@@ -1,6 +1,6 @@
 <?php
 /**
- * NestedSetBehavior
+ * NestedSet Behavior
  *
  * TODO: изменить значение левого и правого ключа на +1
  * TODO: проверять существование цели в appendTo,prependTo,insertBefore,insertAfter?
@@ -9,7 +9,7 @@
  * @author creocoder <creocoder@gmail.com>
  */
 
-class CNestedSetBehavior extends CActiveRecordBehavior
+class ENestedSetBehavior extends CActiveRecordBehavior
 {
 	public $hasManyRoots=false;
 	public $root='root';
