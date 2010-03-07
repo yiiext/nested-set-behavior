@@ -1,11 +1,13 @@
 <?php
 /**
- * NestedSet Behavior
+ * NestedSetBehavior
  *
  * TODO: изменить значение левого и правого ключа на +1
  * TODO: проверять существование цели в appendTo,prependTo,insertBefore,insertAfter?
+ * TODO: запретить перемещение родителя в своего потомка
+ * TODO: ввести статическую переменную и обновлять модели в run-time
  *
- * @version 0.5
+ * @version 0.6
  * @author creocoder <creocoder@gmail.com>
  */
 
@@ -169,8 +171,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$owner->setAttribute($this->left,1);
-			$owner->setAttribute($this->right,2);
+			$owner->setAttribute($this->left,0);
+			$owner->setAttribute($this->right,1);
 			$owner->setAttribute($this->level,0);
 			$owner->save(false);
 			$owner->setAttribute($this->root,$owner->getPrimaryKey());
@@ -247,7 +249,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level)+1);
 		$key=$target->getAttribute($this->right);
-		$this->addNode($target,$key,$runValidation);
+		return $this->addNode($target,$key,$runValidation);
 	}
 
 	/**
@@ -269,7 +271,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level)+1);
 		$key=$target->getAttribute($this->left)+1;
-		$this->addNode($target,$key,$runValidation);
+		return $this->addNode($target,$key,$runValidation);
 	}
 
 	/**
@@ -284,7 +286,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level));
 		$key=$target->getAttribute($this->left);
-		$this->addNode($target,$key,$runValidation);
+		return $this->addNode($target,$key,$runValidation);
 	}
 
 	/**
@@ -299,7 +301,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level));
 		$key=$target->getAttribute($this->right)+1;
-		$this->addNode($target,$key,$runValidation);
+		return $this->addNode($target,$key,$runValidation);
 	}
 
 	/**
@@ -314,7 +316,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		$key=$target->getAttribute($this->left);
 		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level);
-		$this->moveNode($target,$key,$levelDiff);
+		return $this->moveNode($target,$key,$levelDiff);
 	}
 
 	/**
@@ -329,7 +331,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		$key=$target->getAttribute($this->right)+1;
 		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level);
-		$this->moveNode($target,$key,$levelDiff);
+		return $this->moveNode($target,$key,$levelDiff);
 	}
 
 	/**
@@ -341,7 +343,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$key=$target->getAttribute($this->left)+1;
 		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level)+1;
-		$this->moveNode($target,$key,$levelDiff);
+		return $this->moveNode($target,$key,$levelDiff);
 	}
 
 	/**
@@ -353,12 +355,28 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$key=$target->getAttribute($this->right);
 		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level)+1;
-		$this->moveNode($target,$key,$levelDiff);
+		return $this->moveNode($target,$key,$levelDiff);
+	}
+
+	/**
+	 * Determines if node is descendant of subject node.
+	 * @return boolean
+	 */
+	public function isDescentantOf($subj)
+	{
+		$owner=$this->getOwner();
+		$result=($owner->getAttribute($this->left)>$subj->getAttribute($this->left))
+			&& ($owner->getAttribute($this->right)<$subj->getAttribute($this->right));
+
+		if($this->hasManyRoots)
+			$result=$result && ($owner->getAttribute($this->root)===$subj->getAttribute($this->root));
+
+		return $result;
 	}
 
 	/**
 	 * Determines if node is leaf.
-	 * @return boolean whether the creating succeeds.
+	 * @return boolean
 	 */
 	public function isLeaf()
 	{
@@ -367,7 +385,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Determines if node is root.
-	 * @return boolean whether the creating succeeds.
+	 * @return boolean
 	 */
 	public function isRoot()
 	{
