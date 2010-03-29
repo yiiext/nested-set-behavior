@@ -2,15 +2,13 @@
 /**
  * NestedSetBehavior
  *
- * TODO: изменить значение левого и правого ключа на +1
  * TODO: проверять существование цели в appendTo,prependTo,insertBefore,insertAfter?
  * TODO: запретить перемещение родителя в своего потомка
  * TODO: ввести статическую переменную и обновлять модели в run-time
  *
- * @version 0.6
+ * @version 0.7
  * @author creocoder <creocoder@gmail.com>
  */
-
 class ENestedSetBehavior extends CActiveRecordBehavior
 {
 	public $hasManyRoots=false;
@@ -91,7 +89,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		$criteria=$owner->getDbCriteria();
 		$alias=$criteria->alias===null ? 't' : $criteria->alias; //TODO: watch issue 914
 
-		$criteria->addCondition($alias.'.'.$this->level.'=0'); //TODO: стоит отталкиваться от значения левого ключа в 1
+		$criteria->addCondition($alias.'.'.$this->left.'=1');
 
 		return $owner;
 	}
@@ -171,9 +169,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$owner->setAttribute($this->left,0);
-			$owner->setAttribute($this->right,1);
-			$owner->setAttribute($this->level,0);
+			$owner->setAttribute($this->left,1);
+			$owner->setAttribute($this->right,2);
+			$owner->setAttribute($this->level,1);
 			$owner->save(false);
 			$owner->setAttribute($this->root,$owner->getPrimaryKey());
 			$owner->save(false);
@@ -389,7 +387,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function isRoot()
 	{
-		return !(boolean)$this->getOwner()->getAttribute($this->level); //TODO: стоит отталкиваться от значения левого ключа в 1
+		return $this->getOwner()->getAttribute($this->left)==1;
 	}
 
 	protected function shiftLeftRight($first,$delta,$root)
