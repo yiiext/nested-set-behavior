@@ -2,13 +2,12 @@
 /**
  * NestedSetBehavior
  *
- * TODO: сделать возможным удаление через delete(), а не remove()
- * TODO: сделать возможным создание корня через save(), а не createRoot()
- * TODO: проверять существование цели в appendTo,prependTo,insertBefore,insertAfter?
- * TODO: запретить перемещение родителя в своего потомка
+ * TODO: реализовать перемещение узлов в пределах разных деревьев
+ * TODO: сделать возможным удаление через delete(), а не remove()?
+ * TODO: сделать возможным создание корня через save(), а не createRoot()?
  * TODO: ввести статическую переменную и обновлять модели в run-time
  *
- * @version 0.72
+ * @version 0.73
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -469,7 +468,13 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		$owner=$this->getOwner();
 
 		if($owner===$target)
-			throw new CException(Yii::t('yiiext','The target node should not be self.')); //TODO: исправить смысл фразы
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if($target->isDescendantOf($owner))
+			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
+
+		if($this->hasManyRoots && $owner->getAttribute($this->root)===$target->getAttribute($this->root))
+			throw new CException(Yii::t('yiiext','Moving between trees not supported yet.'));
 
 		$db=$owner->getDbConnection();
 		$extTransFlag=$db->getCurrentTransaction();
