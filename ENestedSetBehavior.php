@@ -2,11 +2,13 @@
 /**
  * NestedSetBehavior
  *
+ * TODO: сделать возможным удаление через delete(), а не remove()
+ * TODO: сделать возможным создание корня через save(), а не createRoot()
  * TODO: проверять существование цели в appendTo,prependTo,insertBefore,insertAfter?
  * TODO: запретить перемещение родителя в своего потомка
  * TODO: ввести статическую переменную и обновлять модели в run-time
  *
- * @version 0.7
+ * @version 0.72
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -469,7 +471,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($owner===$target)
 			throw new CException(Yii::t('yiiext','The target node should not be self.')); //TODO: исправить смысл фразы
 
-		$transaction=$owner->getDbConnection()->beginTransaction();
+		$db=$owner->getDbConnection();
+		$extTransFlag=$db->getCurrentTransaction();
+
+		if($extTransFlag===null)
+			$transaction=$db->beginTransaction();
 
 		try
 		{
@@ -496,11 +502,15 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$this->shiftLeftRightRange($left,$right,$key-$left,$root);
 			$this->shiftLeftRight($right+1,-$delta,$root);
 
-			$transaction->commit();
+			if($extTransFlag===null)
+				$transaction->commit();
+
+			return true;
 		}
 		catch(Exception $e)
 		{
-			$transaction->rollBack();
+			if($extTransFlag===null)
+				$transaction->rollBack();
 
 			return false;
 		}
