@@ -361,7 +361,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Determines if node is descendant of subject node.
 	 * @return boolean
 	 */
-	public function isDescentantOf($subj)
+	public function isDescendantOf($subj)
 	{
 		$owner=$this->getOwner();
 		$result=($owner->getAttribute($this->left)>$subj->getAttribute($this->left))
@@ -473,7 +473,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isDescendantOf($owner))
 			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
 
-		if($this->hasManyRoots && $owner->getAttribute($this->root)===$target->getAttribute($this->root))
+		if($this->hasManyRoots && $owner->getAttribute($this->root)!==$target->getAttribute($this->root))
 			throw new CException(Yii::t('yiiext','Moving between trees not supported yet.'));
 
 		$db=$owner->getDbConnection();
