@@ -148,11 +148,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Create root node. Only used in multiple-root trees.
+	 * Saves node as root. Only used in multiple-root trees.
 	 * @return boolean whether the creating succeeds.
 	 * @throws CException if many root mode is off.
 	 */
-	public function createRoot($runValidation=true) //TODO: переименовать в saveAsRoot()?
+	public function saveAsRoot($runValidation=true)
 	{
 		if(!$this->hasManyRoots)
 			throw new CException(Yii::t('yiiext','Many roots mode is off.'));
@@ -192,7 +192,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Deletes node it's descendants.
+	 * Deletes node and it's descendants.
 	 * @return boolean whether the creating succeeds.
 	 */
 	public function remove()

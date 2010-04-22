@@ -36,7 +36,43 @@ class Comment extends CActiveRecord{
 
 [php]
 // выбираем корень дерева
-$root=Comments::model()->roots()->findByPk($pk);
+$root=Comment::model()->roots()->findByPk($pk);
 // получаем все узлы
 $comments=$root->descendants()->findAll();
 ~~~
+
+Ограничения
+-----------
+Поведение пока не умеет делать несколько изменяющих дерево операций за один запрос.
+Это связано с тем, что после какого-либо изменения дерево перестраивается и меняются
+значения left и right. Решением на данный момент является вызов $model->refresh();
+после обновления дерева для получения актуальных данных.
+
+API
+---
+API пока ещё не закончен. Может меняться.
+
+### Named Scopes
+descendants($depth=null) потомки
+children() прямые потомки
+ancestors($depth=null) предки
+roots() корни
+
+### Finders
+parent() Gets record of node parent. Returns CActiveRecord the record found. Null if no record is found.
+getPrevSibling() Gets record of previous sibling.
+getNextSibling()
+
+### Info
+isDescendantOf($subj)
+isLeaf()
+isRoot()
+
+### Actions
+saveAsRoot($runValidation=true) Create root node. Only used in multiple-root trees.
+remove()
+insertBefore($target,$runValidation=true), insertAfter($target,$runValidation=true)
+append($target,$runValidation=true), appendTo($target,$runValidation=true)
+prepend($target,$runValidation=true), prependTo($target,$runValidation=true)
+moveBefore($target), moveAfter($target)
+moveAsFirst($target), moveAsLast($target)
