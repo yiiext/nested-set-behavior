@@ -69,8 +69,8 @@ isLeaf()
 isRoot()
 
 ### Actions
-saveAsRoot($runValidation=true) Create root node. Only used in multiple-root trees.
-remove()
+saveNode() | tree->save()
+deleteNode() | tree->delete()
 insertBefore($target,$runValidation=true), insertAfter($target,$runValidation=true)
 append($target,$runValidation=true), appendTo($target,$runValidation=true)
 prepend($target,$runValidation=true), prependTo($target,$runValidation=true)
