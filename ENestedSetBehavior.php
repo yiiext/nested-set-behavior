@@ -2,12 +2,12 @@
 /**
  * NestedSetBehavior
  *
+ * TODO: добавить исключения в методы beforeDelete() и beforeSave(),
+ * чтобы предотвратить вызов методов save() и delete() напрямую
  * TODO: реализовать перемещение узлов в пределах разных деревьев
- * TODO: сделать возможным удаление через delete(), а не remove()?
- * TODO: сделать возможным создание корня через save(), а не createRoot()?
- * TODO: ввести статическую переменную и обновлять модели в run-time
+ * TODO: обновлять модели в run-time
  *
- * @version 0.73
+ * @version 0.85
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -17,6 +17,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public $left='lft';
 	public $right='rgt';
 	public $level='level';
+	private $_ignoreEvent=false; //TODO: для блокировки исключений
 
 	/**
 	 * Named scope. Gets descendants for node.
@@ -27,19 +28,19 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 		$criteria=$owner->getDbCriteria();
-		$alias=$criteria->alias===null ? 't' : $criteria->alias; //TODO: watch issue 914
+		$alias=$owner->getTableAlias();
 
 		$criteria->mergeWith(array(
-			'condition'=>$alias.'.'.$this->left.'>'.$owner->getAttribute($this->left).
-				' AND '.$alias.'.'.$this->right.'<'.$owner->getAttribute($this->right),
+			'condition'=>$alias.'.'.$this->left.'>'.$owner->{$this->left}.
+				' AND '.$alias.'.'.$this->right.'<'.$owner->{$this->right},
 			'order'=>$alias.'.'.$this->left,
 		));
 
 		if($depth!==null)
-			$criteria->addCondition($alias.'.'.$this->level.'<='.($owner->getAttribute($this->level)+$depth));
+			$criteria->addCondition($alias.'.'.$this->level.'<='.($owner->{$this->level}+$depth));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->getAttribute($this->root));
+			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->{$this->root});
 
 		return $owner;
 	}
@@ -62,19 +63,19 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 		$criteria=$owner->getDbCriteria();
-		$alias=$criteria->alias===null ? 't' : $criteria->alias; //TODO: watch issue 914
+		$alias=$owner->getTableAlias();
 
 		$criteria->mergeWith(array(
-			'condition'=>$alias.'.'.$this->left.'<'.$owner->getAttribute($this->left).
-				' AND '.$alias.'.'.$this->right.'>'.$owner->getAttribute($this->right),
+			'condition'=>$alias.'.'.$this->left.'<'.$owner->{$this->left}.
+				' AND '.$alias.'.'.$this->right.'>'.$owner->{$this->right},
 			'order'=>$alias.'.'.$this->left,
 		));
 
 		if($depth!==null)
-			$criteria->addCondition($alias.'.'.$this->level.'>='.($owner->getAttribute($this->level)+$depth));
+			$criteria->addCondition($alias.'.'.$this->level.'>='.($owner->{$this->level}+$depth));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->getAttribute($this->root));
+			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->{$this->root});
 
 		return $owner;
 	}
@@ -87,10 +88,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function roots()
 	{
 		$owner=$this->getOwner();
-		$criteria=$owner->getDbCriteria();
-		$alias=$criteria->alias===null ? 't' : $criteria->alias; //TODO: watch issue 914
-
-		$criteria->addCondition($alias.'.'.$this->left.'=1');
+		$owner->getDbCriteria()->addCondition($owner->getTableAlias().'.'.$this->left.'=1');
 
 		return $owner;
 	}
@@ -103,16 +101,16 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 		$criteria=$owner->getDbCriteria();
-		$alias=$criteria->alias===null ? 't' : $criteria->alias; //TODO: watch issue 914
+		$alias=$owner->getTableAlias();
 
 		$criteria->mergeWith(array(
-			'condition'=>$alias.'.'.$this->left.'<'.$owner->getAttribute($this->left).
-				' AND '.$alias.'.'.$this->right.'>'.$owner->getAttribute($this->right),
+			'condition'=>$alias.'.'.$this->left.'<'.$owner->{$this->left}.
+				' AND '.$alias.'.'.$this->right.'>'.$owner->{$this->right},
 			'order'=>$alias.'.'.$this->right,
 		));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->getAttribute($this->root));
+			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->{$this->root});
 
 		return $owner->find();
 	}
@@ -121,13 +119,16 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Gets record of previous sibling.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function getPrevSibling() //TODO: переименовать в prev()?
+	public function getPrevSibling($restrictLevel=false) //TODO: переименовать в prev()?
 	{
 		$owner=$this->getOwner();
-		$condition=$this->right.'='.$owner->getAttribute($this->left)-1;
+		$condition=$this->right.'='.($owner->{$this->left}-1);
 
 		if($this->hasManyRoots)
-			$condition.=' AND '.$this->root.'='.$owner->getAttribute($this->root);
+			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
+
+		if($restrictLevel)
+			$condition.=' AND '.$this->level.'='.$owner->{$this->level};
 
 		return $owner->find($condition);
 	}
@@ -136,97 +137,91 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Gets record of next sibling.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function getNextSibling() //TODO: переименовать в next()?
+	public function getNextSibling($restrictLevel=false) //TODO: переименовать в next()?
 	{
 		$owner=$this->getOwner();
-		$condition=$this->left.'='.$owner->getAttribute($this->right)+1;
+		$condition=$this->left.'='.($owner->{$this->right}+1);
 
 		if($this->hasManyRoots)
-			$condition.=' AND '.$this->root.'='.$owner->getAttribute($this->root);
+			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
+
+		if($restrictLevel)
+			$condition.=' AND '.$this->level.'='.$owner->{$this->level};
 
 		return $owner->find($condition);
 	}
 
 	/**
-	 * Saves node as root. Only used in multiple-root trees.
-	 * @return boolean whether the creating succeeds.
+	 * Create root node if multiple-root tree mode. Update node if it's not new.
+	 * @return boolean whether the saving succeeds.
 	 * @throws CException if many root mode is off.
 	 */
-	public function saveAsRoot($runValidation=true)
+	public function save($runValidation=true,$attributes=null)
 	{
-		if(!$this->hasManyRoots)
-			throw new CException(Yii::t('yiiext','Many roots mode is off.'));
-
 		$owner=$this->getOwner();
 
-		if($runValidation && !$owner->validate())
+		if(!$runValidation || $owner->validate($attributes))
+			return $owner->getIsNewRecord() ? $this->makeRoot($attributes) : $owner->update($attributes);
+		else
 			return false;
+	}
 
-		$db=$owner->getDbConnection();
-		$extTransFlag=$db->getCurrentTransaction();
-
-		if($extTransFlag===null)
-			$transaction=$db->beginTransaction();
-
-		try
-		{
-			$owner->setAttribute($this->left,1);
-			$owner->setAttribute($this->right,2);
-			$owner->setAttribute($this->level,1);
-			$owner->save(false);
-			$owner->setAttribute($this->root,$owner->getPrimaryKey());
-			$owner->save(false);
-
-			if($extTransFlag===null)
-				$transaction->commit();
-
-			return true;
-		}
-		catch(Exception $e)
-		{
-			if($extTransFlag===null)
-				$transaction->rollBack();
-
-			return false;
-		}
+	public function saveNode($runValidation=true,$attributes=null)
+	{
+		return $this->save($runValidation,$attributes);
 	}
 
 	/**
 	 * Deletes node and it's descendants.
-	 * @return boolean whether the creating succeeds.
+	 * @return boolean whether the deletion is successful.
 	 */
-	public function remove()
+	public function delete()
 	{
 		$owner=$this->getOwner();
+
+		if($owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be deleted because it is new.'));
 
 		$transaction=$owner->getDbConnection()->beginTransaction();
 
 		try
 		{
-			$condition=$this->left.'>='.$owner->getAttribute($this->left).' AND '.
-				$this->right.'<='.$owner->getAttribute($this->right);
+			$root=$this->hasManyRoots ? $owner->{$this->root} : null;
 
-			$root=$this->hasManyRoots ? $owner->getAttribute($this->root) : null;
+			if($owner->isLeaf())
+				$result=$owner->delete();
+			else
+			{
+				$condition=$this->left.'>='.$owner->{$this->left}.' AND '.
+					$this->right.'<='.$owner->{$this->right};
 
-			if($root!==null)
-				$condition.=' AND '.$this->root.'='.$root;
+				if($root!==null)
+					$condition.=' AND '.$this->root.'='.$root;
 
-			$owner->deleteAll($condition);
+				$result=$owner->deleteAll($condition)>0;
+			}
 
-			$first=$owner->getAttribute($this->right)+1;
-			$delta=$owner->getAttribute($this->left)-$owner->getAttribute($this->right)-1;
-			$this->shiftLeftRight($first,$delta,$root);
+			if($result)
+			{
+				$first=$owner->{$this->right}+1;
+				$delta=$owner->{$this->left}-$owner->{$this->right}-1;
+				$this->shiftLeftRight($first,$delta,$root);
+				$transaction->commit();
 
-			$transaction->commit();
-
-			return true;
+				return true;
+			}
 		}
 		catch(Exception $e)
 		{
 			$transaction->rollBack();
-
-			return false;
 		}
+
+		return false;
+	}
+
+	public function deleteNode()
+	{
+		return $this->delete();
 	}
 
 	/**
@@ -234,9 +229,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the appending succeeds.
 	 * @throws CException if the target node is self.
 	 */
-	public function append($target,$runValidation=true)
+	public function append($target,$runValidation=true,$attributes=null)
 	{
-		return $target->appendTo($this->getOwner(),$runValidation);
+		return $target->appendTo($this->getOwner(),$runValidation,$attributes);
 	}
 
 	/**
@@ -244,11 +239,17 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the appending succeeds.
 	 * @throws CException if the target node is self.
 	 */
-	public function appendTo($target,$runValidation=true)
+	public function appendTo($target,$runValidation=true,$attributes=null)
 	{
-		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level)+1);
-		$key=$target->getAttribute($this->right);
-		return $this->addNode($target,$key,$runValidation);
+		$owner=$this->getOwner();
+
+		if($runValidation && !$owner->validate())
+			return false;
+
+		$owner->{$this->level}=$target->{$this->level}+1;
+		$key=$target->{$this->right};
+
+		return $this->addNode($target,$key,$attributes);
 	}
 
 	/**
@@ -256,9 +257,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the prepending succeeds.
 	 * @throws CException if the target node is self.
 	 */
-	public function prepend($target,$runValidation=true)
+	public function prepend($target,$runValidation=true,$attributes=null)
 	{
-		return $target->prependTo($this->getOwner(),$runValidation);
+		return $target->prependTo($this->getOwner(),$runValidation,$attributes);
 	}
 
 	/**
@@ -266,11 +267,17 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the prepending succeeds.
 	 * @throws CException if the target node is self.
 	 */
-	public function prependTo($target,$runValidation=true)
+	public function prependTo($target,$runValidation=true,$attributes=null)
 	{
-		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level)+1);
-		$key=$target->getAttribute($this->left)+1;
-		return $this->addNode($target,$key,$runValidation);
+		$owner=$this->getOwner();
+
+		if($runValidation && !$owner->validate())
+			return false;
+
+		$owner->{$this->level}=$target->{$this->level}+1;
+		$key=$target->{$this->left}+1;
+
+		return $this->addNode($target,$key,$attributes);
 	}
 
 	/**
@@ -278,14 +285,20 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the inserting succeeds.
 	 * @throws CException if the target node is self or target node is root.
 	 */
-	public function insertBefore($target,$runValidation=true)
+	public function insertBefore($target,$runValidation=true,$attributes=null)
 	{
+		$owner=$this->getOwner();
+
+		if($runValidation && !$owner->validate())
+			return false;
+
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level));
-		$key=$target->getAttribute($this->left);
-		return $this->addNode($target,$key,$runValidation);
+		$owner->{$this->level}=$target->{$this->level};
+		$key=$target->{$this->left};
+
+		return $this->addNode($target,$key,$attributes);
 	}
 
 	/**
@@ -293,14 +306,20 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the inserting succeeds.
 	 * @throws CException if the target node is self or target node is root.
 	 */
-	public function insertAfter($target,$runValidation=true)
+	public function insertAfter($target,$runValidation=true,$attributes=null)
 	{
+		$owner=$this->getOwner();
+
+		if($runValidation && !$owner->validate())
+			return false;
+
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		$this->getOwner()->setAttribute($this->level,$target->getAttribute($this->level));
-		$key=$target->getAttribute($this->right)+1;
-		return $this->addNode($target,$key,$runValidation);
+		$owner->{$this->level}=$target->{$this->level};
+		$key=$target->{$this->right}+1;
+
+		return $this->addNode($target,$key,$attributes);
 	}
 
 	/**
@@ -313,8 +332,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		$key=$target->getAttribute($this->left);
-		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level);
+		$key=$target->{$this->left};
+		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level};
+
 		return $this->moveNode($target,$key,$levelDiff);
 	}
 
@@ -328,8 +348,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		$key=$target->getAttribute($this->right)+1;
-		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level);
+		$key=$target->{$this->right}+1;
+		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level};
+
 		return $this->moveNode($target,$key,$levelDiff);
 	}
 
@@ -340,8 +361,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function moveAsFirst($target)
 	{
-		$key=$target->getAttribute($this->left)+1;
-		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level)+1;
+		$key=$target->{$this->left}+1;
+		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level}+1;
+
 		return $this->moveNode($target,$key,$levelDiff);
 	}
 
@@ -352,8 +374,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function moveAsLast($target)
 	{
-		$key=$target->getAttribute($this->right);
-		$levelDiff=$target->getAttribute($this->level)-$this->getOwner()->getAttribute($this->level)+1;
+		$key=$target->{$this->right};
+		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level}+1;
+
 		return $this->moveNode($target,$key,$levelDiff);
 	}
 
@@ -364,11 +387,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function isDescendantOf($subj)
 	{
 		$owner=$this->getOwner();
-		$result=($owner->getAttribute($this->left)>$subj->getAttribute($this->left))
-			&& ($owner->getAttribute($this->right)<$subj->getAttribute($this->right));
+		$result=($owner->{$this->left}>$subj->{$this->left})
+			&& ($owner->{$this->right}<$subj->{$this->right});
 
 		if($this->hasManyRoots)
-			$result=$result && ($owner->getAttribute($this->root)===$subj->getAttribute($this->root));
+			$result=$result && ($owner->{$this->root}===$subj->{$this->root});
 
 		return $result;
 	}
@@ -379,7 +402,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function isLeaf()
 	{
-		return $this->getOwner()->getAttribute($this->right)-$this->getOwner()->getAttribute($this->left)===1;
+		$owner=$this->getOwner();
+
+		return $owner->{$this->right}-$owner->{$this->left}===1;
 	}
 
 	/**
@@ -388,7 +413,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function isRoot()
 	{
-		return $this->getOwner()->getAttribute($this->left)==1;
+		return $this->getOwner()->{$this->left}==1;
 	}
 
 	protected function shiftLeftRight($first,$delta,$root)
@@ -421,14 +446,14 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
-	protected function addNode($target,$key,$runValidation)
+	protected function addNode($target,$key,$attributes)
 	{
 		$owner=$this->getOwner();
 
-		if($runValidation && !$owner->validate())
-			return false;
+		if(!$owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
 
-		if($owner===$target)
+		if($owner->equals($target))
 			throw new CException(Yii::t('yiiext','The target node should not be self.'));
 
 		$db=$owner->getDbConnection();
@@ -439,41 +464,87 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$root=$this->hasManyRoots ? $target->getAttribute($this->root) : null;
+			$root=$this->hasManyRoots ? $target->{$this->root} : null;
 			$this->shiftLeftRight($key,2,$root);
-			$owner->setAttribute($this->left,$key);
-			$owner->setAttribute($this->right,$key+1);
+			$owner->{$this->left}=$key;
+			$owner->{$this->right}=$key+1;
 
 			if($root!==null)
-				$owner->setAttribute($this->root,$root);
+				$owner->{$this->root}=$root;
 
-			$owner->save(false);
+			if($owner->insert($attributes))
+			{
+				if($extTransFlag===null)
+					$transaction->commit();
 
-			if($extTransFlag===null)
-				$transaction->commit();
-
-			return true;
+				return true;
+			}
+			else if($extTransFlag===null)
+				$transaction->rollBack();
 		}
 		catch(Exception $e)
 		{
 			if($extTransFlag===null)
 				$transaction->rollBack();
-
-			return false;
 		}
+
+		return false;
+	}
+
+	protected function makeRoot($attributes)
+	{
+		if(!$this->hasManyRoots)
+			throw new CException(Yii::t('yiiext','Many roots mode is off.'));
+
+		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
+		$extTransFlag=$db->getCurrentTransaction();
+
+		if($extTransFlag===null)
+			$transaction=$db->beginTransaction();
+
+		try
+		{
+			$owner->{$this->left}=1;
+			$owner->{$this->right}=2;
+			$owner->{$this->level}=1;
+
+			if($owner->insert($attributes))
+			{
+				$pk=$owner->getPrimaryKey();
+				$owner->updateByPk($pk,array($this->root=>$pk));
+
+				if($extTransFlag===null)
+					$transaction->commit();
+
+				return true;
+			}
+			else if($extTransFlag===null)
+				$transaction->rollBack();
+		}
+		catch(Exception $e)
+		{
+			if($extTransFlag===null)
+				$transaction->rollBack();
+		}
+
+		return false;
 	}
 
 	protected function moveNode($target,$key,$levelDiff)
 	{
 		$owner=$this->getOwner();
 
-		if($owner===$target)
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($owner->equals($target))
 			throw new CException(Yii::t('yiiext','The target node should not be self.'));
 
 		if($target->isDescendantOf($owner))
 			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
 
-		if($this->hasManyRoots && $owner->getAttribute($this->root)!==$target->getAttribute($this->root))
+		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
 			throw new CException(Yii::t('yiiext','Moving between trees not supported yet.'));
 
 		$db=$owner->getDbConnection();
@@ -484,10 +555,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$left=$owner->getAttribute($this->left);
-			$right=$owner->getAttribute($this->right);
+			$left=$owner->{$this->left};
+			$right=$owner->{$this->right};
 			$delta=$right-$left+1;
-			$root=$this->hasManyRoots ? $owner->getAttribute($this->root) : null;
+			$root=$this->hasManyRoots ? $owner->{$this->root} : null;
 
 			$this->shiftLeftRight($key,$delta,$root);
 
