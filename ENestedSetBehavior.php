@@ -231,10 +231,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function append($target,$runValidation=true,$attributes=null)
 	{
-		if($runValidation && !$target->validate())
-			return false;
-
-		return $target->appendTo($this->getOwner(),false,$attributes);
+		return $target->appendTo($this->getOwner(),$runValidation,$attributes);
 	}
 
 	/**
@@ -262,10 +259,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function prepend($target,$runValidation=true,$attributes=null)
 	{
-		if($runValidation && !$target->validate())
-			return false;
-
-		return $target->prependTo($this->getOwner(),false,$attributes);
+		return $target->prependTo($this->getOwner(),$runValidation,$attributes);
 	}
 
 	/**
