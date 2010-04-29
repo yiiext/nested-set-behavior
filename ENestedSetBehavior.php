@@ -511,7 +511,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 			if($owner->insert($attributes))
 			{
-				$pk=$owner->getPrimaryKey();
+				$pk=$owner->{$this->root}=$owner->getPrimaryKey();
 				$owner->updateByPk($pk,array($this->root=>$pk));
 
 				if($extTransFlag===null)
