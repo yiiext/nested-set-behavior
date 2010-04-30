@@ -3,7 +3,7 @@ CREATE TABLE `comment` (
   `root` int(10) unsigned NOT NULL,
   `lft` int(10) unsigned NOT NULL,
   `rgt` int(10) unsigned NOT NULL,
-  `level` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `level` smallint(5) unsigned NOT NULL,
   `text` text NOT NULL,
   PRIMARY KEY (`id`),
   KEY `lft` (`lft`),
