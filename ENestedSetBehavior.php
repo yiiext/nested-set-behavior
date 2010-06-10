@@ -344,7 +344,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
 		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->left},__FUNCTION__);
+			return $this->moveBetweenTrees($target,$target->{$this->left},$target->{$this->level}-$owner->{$this->level});
 		else
 			return $this->moveNode($target->{$this->left},$target->{$this->level}-$owner->{$this->level});
 	}
@@ -371,7 +371,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
 		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->right}+1,__FUNCTION__);
+			return $this->moveBetweenTrees($target,$target->{$this->right}+1,$target->{$this->level}-$owner->{$this->level});
 		else
 			return $this->moveNode($target->{$this->right}+1,$target->{$this->level}-$owner->{$this->level});
 	}
@@ -395,7 +395,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
 
 		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->left}+1,__FUNCTION__);
+			return $this->moveBetweenTrees($target,$target->{$this->left}+1,$target->{$this->level}-$owner->{$this->level}+1);
 		else
 			return $this->moveNode($target->{$this->left}+1,$target->{$this->level}-$owner->{$this->level}+1);
 	}
@@ -419,7 +419,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
 
 		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->right},__FUNCTION__);
+			return $this->moveBetweenTrees($target,$target->{$this->right},$target->{$this->level}-$owner->{$this->level}+1);
 		else
 			return $this->moveNode($target->{$this->right},$target->{$this->level}-$owner->{$this->level}+1);
 	}
@@ -623,7 +623,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
-	protected function moveBetweenTrees($target,$key,$type)
+	protected function moveBetweenTrees($target,$key,$levelDiff)
 	{
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
@@ -638,35 +638,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$oldRoot=$owner->{$this->root};
 			$oldLeft=$owner->{$this->left};
 			$oldRight=$owner->{$this->right};
-			$oldLevel=$owner->{$this->level};
 
-			$this->shiftLeftRight($key,$oldRight-$oldLeft-1,$newRoot);
-			$this->shiftLeftRight($oldRight+1,$oldLeft-$oldRight-1,$oldRoot);
+			$this->shiftLeftRight($key,$oldRight-$oldLeft+1,$newRoot);
 
-			switch($type)
-			{
-				case 'moveBefore':
-				case 'moveAfter':
-					$owner->{$this->level}=$target->{$this->level};
-					break;
-				case 'moveAsFirst':
-				case 'moveAsLast':
-					$owner->{$this->level}=$target->{$this->level}+1;
-					break;
-				default:
-					throw new CException(Yii::t('yiiext','Unknown move type.'));
-			}
-
-			$owner->{$this->root}=$newRoot;
-			$owner->{$this->left}=$key;
-			$owner->{$this->right}=$key+($oldRight-$oldLeft);
-
-			$owner->updateByPk($owner->getPrimaryKey(),$owner->getAttributes());
-
-			$newLevel=$owner->{$this->level};
-			$levelDiff=$newLevel-$oldLevel;
-			$diff=$owner->{$this->left}-$oldLeft;
-
+			$diff=$key-$oldLeft;
 			$owner->updateAll(
 				array(
 					$this->left=>new CDbExpression($this->left.sprintf('%+d',$diff)),
@@ -674,8 +649,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 					$this->level=>new CDbExpression($this->level.sprintf('%+d',$levelDiff)),
 					$this->root=>$newRoot,
 				),
-				$this->left.'>'.$oldLeft.' AND '.$this->right.'<'.$oldRight.' AND '.$this->root.'='.$oldRoot
+				$this->left.'>='.$oldLeft.' AND '.$this->right.'<='.$oldRight.' AND '.$this->root.'='.$oldRoot
 			);
+
+			$this->shiftLeftRight($oldRight+1,$oldLeft-$oldRight-1,$oldRoot);
 
 			if($extTransFlag===null)
 				$transaction->commit();
