@@ -4,10 +4,10 @@
  *
  * TODO: добавить исключения в методы beforeDelete() и beforeSave(),
  * чтобы предотвратить вызов методов save() и delete() напрямую
- * TODO: реализовать перемещение узлов в пределах разных деревьев
  * TODO: обновлять модели в run-time
+ * TODO: изменить сигнатуру addNode()
  *
- * @version 0.85
+ * @version 0.90
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -225,34 +225,6 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Appends target to node as last child.
-	 * @return boolean whether the appending succeeds.
-	 * @throws CException if the target node is self.
-	 */
-	public function append($target,$runValidation=true,$attributes=null)
-	{
-		return $target->appendTo($this->getOwner(),$runValidation,$attributes);
-	}
-
-	/**
-	 * Appends node to target as last child.
-	 * @return boolean whether the appending succeeds.
-	 * @throws CException if the target node is self.
-	 */
-	public function appendTo($target,$runValidation=true,$attributes=null)
-	{
-		$owner=$this->getOwner();
-
-		if($runValidation && !$owner->validate())
-			return false;
-
-		$owner->{$this->level}=$target->{$this->level}+1;
-		$key=$target->{$this->right};
-
-		return $this->addNode($target,$key,$attributes);
-	}
-
-	/**
 	 * Prepends target to node as first child.
 	 * @return boolean whether the prepending succeeds.
 	 * @throws CException if the target node is self.
@@ -276,6 +248,34 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		$owner->{$this->level}=$target->{$this->level}+1;
 		$key=$target->{$this->left}+1;
+
+		return $this->addNode($target,$key,$attributes);
+	}
+
+	/**
+	 * Appends target to node as last child.
+	 * @return boolean whether the appending succeeds.
+	 * @throws CException if the target node is self.
+	 */
+	public function append($target,$runValidation=true,$attributes=null)
+	{
+		return $target->appendTo($this->getOwner(),$runValidation,$attributes);
+	}
+
+	/**
+	 * Appends node to target as last child.
+	 * @return boolean whether the appending succeeds.
+	 * @throws CException if the target node is self.
+	 */
+	public function appendTo($target,$runValidation=true,$attributes=null)
+	{
+		$owner=$this->getOwner();
+
+		if($runValidation && !$owner->validate())
+			return false;
+
+		$owner->{$this->level}=$target->{$this->level}+1;
+		$key=$target->{$this->right};
 
 		return $this->addNode($target,$key,$attributes);
 	}
@@ -329,13 +329,24 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function moveBefore($target)
 	{
+		$owner=$this->getOwner();
+
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if($target->isDescendantOf($owner))
+			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
+
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		$key=$target->{$this->left};
-		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level};
-
-		return $this->moveNode($target,$key,$levelDiff);
+		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
+			return $this->moveBetweenTrees($target,$target->{$this->left},__FUNCTION__);
+		else
+			return $this->moveNode($target->{$this->left},$target->{$this->level}-$owner->{$this->level});
 	}
 
 	/**
@@ -345,13 +356,24 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function moveAfter($target)
 	{
+		$owner=$this->getOwner();
+
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if($target->isDescendantOf($owner))
+			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
+
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		$key=$target->{$this->right}+1;
-		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level};
-
-		return $this->moveNode($target,$key,$levelDiff);
+		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
+			return $this->moveBetweenTrees($target,$target->{$this->right}+1,__FUNCTION__);
+		else
+			return $this->moveNode($target->{$this->right}+1,$target->{$this->level}-$owner->{$this->level});
 	}
 
 	/**
@@ -361,10 +383,21 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function moveAsFirst($target)
 	{
-		$key=$target->{$this->left}+1;
-		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level}+1;
+		$owner=$this->getOwner();
 
-		return $this->moveNode($target,$key,$levelDiff);
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if($target->isDescendantOf($owner))
+			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
+
+		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
+			return $this->moveBetweenTrees($target,$target->{$this->left}+1,__FUNCTION__);
+		else
+			return $this->moveNode($target->{$this->left}+1,$target->{$this->level}-$owner->{$this->level}+1);
 	}
 
 	/**
@@ -374,10 +407,21 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function moveAsLast($target)
 	{
-		$key=$target->{$this->right};
-		$levelDiff=$target->{$this->level}-$this->getOwner()->{$this->level}+1;
+		$owner=$this->getOwner();
 
-		return $this->moveNode($target,$key,$levelDiff);
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if($target->isDescendantOf($owner))
+			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
+
+		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
+			return $this->moveBetweenTrees($target,$target->{$this->right},__FUNCTION__);
+		else
+			return $this->moveNode($target->{$this->right},$target->{$this->level}-$owner->{$this->level}+1);
 	}
 
 	/**
@@ -531,22 +575,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return false;
 	}
 
-	protected function moveNode($target,$key,$levelDiff)
+	protected function moveNode($key,$levelDiff)
 	{
 		$owner=$this->getOwner();
-
-		if($owner->getIsNewRecord())
-			throw new CException(Yii::t('yiiext','The node should not be new record.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isDescendantOf($owner))
-			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
-
-		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			throw new CException(Yii::t('yiiext','Moving between trees not supported yet.'));
-
 		$db=$owner->getDbConnection();
 		$extTransFlag=$db->getCurrentTransaction();
 
@@ -577,6 +608,74 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 			$this->shiftLeftRightRange($left,$right,$key-$left,$root);
 			$this->shiftLeftRight($right+1,-$delta,$root);
+
+			if($extTransFlag===null)
+				$transaction->commit();
+
+			return true;
+		}
+		catch(Exception $e)
+		{
+			if($extTransFlag===null)
+				$transaction->rollBack();
+
+			return false;
+		}
+	}
+
+	protected function moveBetweenTrees($target,$key,$type)
+	{
+		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
+		$extTransFlag=$db->getCurrentTransaction();
+
+		if($extTransFlag===null)
+			$transaction=$db->beginTransaction();
+
+		try
+		{
+			$newRoot=$target->{$this->root};
+			$oldRoot=$owner->{$this->root};
+			$oldLeft=$owner->{$this->left};
+			$oldRight=$owner->{$this->right};
+			$oldLevel=$owner->{$this->level};
+
+			$this->shiftLeftRight($key,$oldRight-$oldLeft-1,$newRoot);
+			$this->shiftLeftRight($oldRight+1,$oldLeft-$oldRight-1,$oldRoot);
+
+			switch($type)
+			{
+				case 'moveBefore':
+				case 'moveAfter':
+					$owner->{$this->level}=$target->{$this->level};
+					break;
+				case 'moveAsFirst':
+				case 'moveAsLast':
+					$owner->{$this->level}=$target->{$this->level}+1;
+					break;
+				default:
+					throw new CException(Yii::t('yiiext','Unknown move type.'));
+			}
+
+			$owner->{$this->root}=$newRoot;
+			$owner->{$this->left}=$key;
+			$owner->{$this->right}=$key+($oldRight-$oldLeft);
+
+			$owner->updateByPk($owner->getPrimaryKey(),$owner->getAttributes());
+
+			$newLevel=$owner->{$this->level};
+			$levelDiff=$newLevel-$oldLevel;
+			$diff=$owner->{$this->left}-$oldLeft;
+
+			$owner->updateAll(
+				array(
+					$this->left=>new CDbExpression($this->left.sprintf('%+d',$diff)),
+					$this->right=>new CDbExpression($this->right.sprintf('%+d',$diff)),
+					$this->level=>new CDbExpression($this->level.sprintf('%+d',$levelDiff)),
+					$this->root=>$newRoot,
+				),
+				$this->left.'>'.$oldLeft.' AND '.$this->right.'<'.$oldRight.' AND '.$this->root.'='.$oldRoot
+			);
 
 			if($extTransFlag===null)
 				$transaction->commit();
