@@ -4,4 +4,4 @@
 
 0.85
 ----
-[*] Initial public release.
+[*] Initial public release (creocoder)
