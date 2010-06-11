@@ -10,6 +10,7 @@ Nested Set
 Создать необходимые поля в таблице БД (см. schema.sql).
 
 Сконфигурировать модель:
+
 ~~~
 [php]
 class Comment extends CActiveRecord {
@@ -34,6 +35,7 @@ class Comment extends CActiveRecord {
 Использование
 -------------
 
+~~~
 [php]
 // выбираем корень дерева
 $root=Comment::model()->roots()->findByPk($pk);

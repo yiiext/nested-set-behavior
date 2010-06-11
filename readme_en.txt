@@ -9,6 +9,7 @@ Installing and configuring
 Create DB structure as shown in schema.sql.
 
 Configure your model:
+
 ~~~
 [php]
 class Comment extends CActiveRecord {
@@ -33,6 +34,7 @@ class Comment extends CActiveRecord {
 Usage
 -----
 
+~~~
 [php]
 // getting a root
 $root=Comment::model()->roots()->findByPk($pk);
