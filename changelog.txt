@@ -1,5 +1,7 @@
+0.90
+----
+[+] Moving a node to a different root is now supported (creocoder)
 
-
-1.0
----
-Initial release.
+0.85
+----
+[*] Initial public release.
