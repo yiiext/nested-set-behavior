@@ -149,21 +149,17 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 
-		if(!$runValidation || $owner->validate($attributes))
-		{
-			if($owner->getIsNewRecord())
-				return $this->makeRoot($attributes);
-			else
-			{
-                $this->_ignoreEvent=true;
-				$result=$owner->update($attributes);
-				$this->_ignoreEvent=false;
-
-				return $result;
-			}
-		}
-		else
+		if($runValidation && !$owner->validate($attributes))
 			return false;
+
+		if($owner->getIsNewRecord())
+			return $this->makeRoot($attributes);
+
+		$this->_ignoreEvent=true;
+		$result=$owner->update($attributes);
+		$this->_ignoreEvent=false;
+
+		return $result;
 	}
 
 	public function saveNode($runValidation=true,$attributes=null)
@@ -190,7 +186,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 			if($owner->isLeaf())
 			{
-                $this->_ignoreEvent=true;
+				$this->_ignoreEvent=true;
 				$result=$owner->delete();
 				$this->_ignoreEvent=false;
 			}
@@ -257,7 +253,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-        	$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->root}=$target->{$this->root};
 
 		$owner->{$this->level}=$target->{$this->level}+1;
 		$key=$target->{$this->left}+1;
@@ -294,7 +290,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-        	$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->root}=$target->{$this->root};
 
 		$owner->{$this->level}=$target->{$this->level}+1;
 		$key=$target->{$this->right};
@@ -324,7 +320,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-        	$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->root}=$target->{$this->root};
 
 		$owner->{$this->level}=$target->{$this->level};
 		$key=$target->{$this->left};
@@ -354,7 +350,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-        	$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->root}=$target->{$this->root};
 
 		$owner->{$this->level}=$target->{$this->level};
 		$key=$target->{$this->right}+1;
@@ -644,11 +640,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 			$this->shiftLeftRight($key,$delta,$root);
 
-        	if($left>=$key)
-        	{
+			if($left>=$key)
+			{
 				$left+=$delta;
 				$right+=$delta;
-        	}
+			}
 
 			$condition=$this->left.'>='.$left.' AND '.$this->right.'<='.$right;
 
