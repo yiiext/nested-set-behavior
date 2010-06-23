@@ -1,3 +1,7 @@
+0.95
+----
+[+] Unit tests added (creocoder)
+
 0.90
 ----
 [+] Moving a node to a different root is now supported (creocoder)
