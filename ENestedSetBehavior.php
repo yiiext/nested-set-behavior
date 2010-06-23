@@ -2,12 +2,7 @@
 /**
  * NestedSetBehavior
  *
- * TODO: добавить исключения в методы beforeDelete() и beforeSave(),
- * чтобы предотвратить вызов методов save() и delete() напрямую
- * TODO: обновлять модели в run-time
- * TODO: изменить сигнатуру addNode()
- *
- * @version 0.90
+ * @version 0.95
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -17,7 +12,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public $left='lft';
 	public $right='rgt';
 	public $level='level';
-	private $_ignoreEvent=false; //TODO: для блокировки исключений
+	private $_ignoreEvent=false;
 
 	/**
 	 * Named scope. Gets descendants for node.
@@ -119,16 +114,13 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Gets record of previous sibling.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function getPrevSibling($restrictLevel=false) //TODO: переименовать в prev()?
+	public function getPrevSibling() //TODO: переименовать в prev()?
 	{
 		$owner=$this->getOwner();
 		$condition=$this->right.'='.($owner->{$this->left}-1);
 
 		if($this->hasManyRoots)
 			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
-
-		if($restrictLevel)
-			$condition.=' AND '.$this->level.'='.$owner->{$this->level};
 
 		return $owner->find($condition);
 	}
@@ -137,16 +129,13 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Gets record of next sibling.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function getNextSibling($restrictLevel=false) //TODO: переименовать в next()?
+	public function getNextSibling() //TODO: переименовать в next()?
 	{
 		$owner=$this->getOwner();
 		$condition=$this->left.'='.($owner->{$this->right}+1);
 
 		if($this->hasManyRoots)
 			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
-
-		if($restrictLevel)
-			$condition.=' AND '.$this->level.'='.$owner->{$this->level};
 
 		return $owner->find($condition);
 	}
@@ -161,7 +150,18 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		$owner=$this->getOwner();
 
 		if(!$runValidation || $owner->validate($attributes))
-			return $owner->getIsNewRecord() ? $this->makeRoot($attributes) : $owner->update($attributes);
+		{
+			if($owner->getIsNewRecord())
+				return $this->makeRoot($attributes);
+			else
+			{
+                $this->_ignoreEvent=true;
+				$result=$owner->update($attributes);
+				$this->_ignoreEvent=false;
+
+				return $result;
+			}
+		}
 		else
 			return false;
 	}
@@ -189,7 +189,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$root=$this->hasManyRoots ? $owner->{$this->root} : null;
 
 			if($owner->isLeaf())
+			{
+                $this->_ignoreEvent=true;
 				$result=$owner->delete();
+				$this->_ignoreEvent=false;
+			}
 			else
 			{
 				$condition=$this->left.'>='.$owner->{$this->left}.' AND '.
@@ -243,13 +247,22 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 
+		if(!$owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
 		if($runValidation && !$owner->validate())
 			return false;
+
+		if($this->hasManyRoots)
+        	$owner->{$this->root}=$target->{$this->root};
 
 		$owner->{$this->level}=$target->{$this->level}+1;
 		$key=$target->{$this->left}+1;
 
-		return $this->addNode($target,$key,$attributes);
+		return $this->addNode($key,$attributes);
 	}
 
 	/**
@@ -271,13 +284,22 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 
+		if(!$owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
 		if($runValidation && !$owner->validate())
 			return false;
+
+		if($this->hasManyRoots)
+        	$owner->{$this->root}=$target->{$this->root};
 
 		$owner->{$this->level}=$target->{$this->level}+1;
 		$key=$target->{$this->right};
 
-		return $this->addNode($target,$key,$attributes);
+		return $this->addNode($key,$attributes);
 	}
 
 	/**
@@ -289,16 +311,25 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 
-		if($runValidation && !$owner->validate())
-			return false;
+		if(!$owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
 
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
+		if($runValidation && !$owner->validate())
+			return false;
+
+		if($this->hasManyRoots)
+        	$owner->{$this->root}=$target->{$this->root};
+
 		$owner->{$this->level}=$target->{$this->level};
 		$key=$target->{$this->left};
 
-		return $this->addNode($target,$key,$attributes);
+		return $this->addNode($key,$attributes);
 	}
 
 	/**
@@ -310,16 +341,25 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 
-		if($runValidation && !$owner->validate())
-			return false;
+		if(!$owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
 
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
+		if($runValidation && !$owner->validate())
+			return false;
+
+		if($this->hasManyRoots)
+        	$owner->{$this->root}=$target->{$this->root};
+
 		$owner->{$this->level}=$target->{$this->level};
 		$key=$target->{$this->right}+1;
 
-		return $this->addNode($target,$key,$attributes);
+		return $this->addNode($key,$attributes);
 	}
 
 	/**
@@ -460,6 +500,22 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return $this->getOwner()->{$this->left}==1;
 	}
 
+	public function beforeSave($event)
+	{
+		if($this->_ignoreEvent)
+			return true;
+		else
+			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::save() method when ENestedSetBehavior attached.'));
+	}
+
+	public function beforeDelete($event)
+	{
+		if($this->_ignoreEvent)
+			return true;
+		else
+			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::delete() method when ENestedSetBehavior attached.'));
+	}
+
 	protected function shiftLeftRight($first,$delta,$root)
 	{
 		$owner=$this->getOwner();
@@ -490,16 +546,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
-	protected function addNode($target,$key,$attributes)
+	protected function addNode($key,$attributes)
 	{
 		$owner=$this->getOwner();
-
-		if(!$owner->getIsNewRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
 		$db=$owner->getDbConnection();
 		$extTransFlag=$db->getCurrentTransaction();
 
@@ -508,15 +557,14 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$root=$this->hasManyRoots ? $target->{$this->root} : null;
-			$this->shiftLeftRight($key,2,$root);
+			$this->shiftLeftRight($key,2,$this->hasManyRoots ? $owner->{$this->root} : null);
 			$owner->{$this->left}=$key;
 			$owner->{$this->right}=$key+1;
+			$this->_ignoreEvent=true;
+			$result=$owner->insert($attributes);
+			$this->_ignoreEvent=false;
 
-			if($root!==null)
-				$owner->{$this->root}=$root;
-
-			if($owner->insert($attributes))
+			if($result)
 			{
 				if($extTransFlag===null)
 					$transaction->commit();
@@ -552,8 +600,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$owner->{$this->left}=1;
 			$owner->{$this->right}=2;
 			$owner->{$this->level}=1;
+			$this->_ignoreEvent=true;
+			$result=$owner->insert($attributes);
+			$this->_ignoreEvent=false;
 
-			if($owner->insert($attributes))
+			if($result)
 			{
 				$pk=$owner->{$this->root}=$owner->getPrimaryKey();
 				$owner->updateByPk($pk,array($this->root=>$pk));
