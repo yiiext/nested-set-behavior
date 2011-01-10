@@ -1,7 +1,11 @@
+next
+----
+[*] Quotes for columns added. (Veaceslav Medvedev)
+
 0.95
 ----
 [+] Unit tests added (creocoder)
-[+] Incorrect usage of save() and delete() instead of behavior's saveNode() and deleteNode() is now detected (creocoder)
+[*] Incorrect usage of save() and delete() instead of behavior's saveNode() and deleteNode() is now detected (creocoder)
 
 0.90
 ----
@@ -9,4 +13,4 @@
 
 0.85
 ----
-[*] Initial public release (creocoder)
+[+] Initial public release (creocoder)
