@@ -117,11 +117,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function getPrevSibling() //TODO: переименовать в prev()?
 	{
 		$owner=$this->getOwner();
-		$alias=$owner->getTableAlias();
-		$condition=$alias.'.'.$this->right.'='.($owner->{$this->left}-1);
+		$condition=$this->right.'='.($owner->{$this->left}-1);
 
 		if($this->hasManyRoots)
-			$condition.=' AND '.$alias.'.'.$this->root.'='.$owner->{$this->root};
+			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
 
 		return $owner->find($condition);
 	}
@@ -133,11 +132,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function getNextSibling() //TODO: переименовать в next()?
 	{
 		$owner=$this->getOwner();
-		$alias=$owner->getTableAlias();
-		$condition=$alias.'.'.$this->left.'='.($owner->{$this->right}+1);
+		$condition=$this->left.'='.($owner->{$this->right}+1);
 
 		if($this->hasManyRoots)
-			$condition.=' AND '.$alias.'.'.$this->root.'='.$owner->{$this->root};
+			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
 
 		return $owner->find($condition);
 	}
@@ -194,11 +192,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			}
 			else
 			{
-				$condition='`'.$this->left.'`>='.$owner->{$this->left}.' AND '.
-					'`'.$this->right.'`<='.$owner->{$this->right};
+				$condition=$this->left.'>='.$owner->{$this->left}.' AND '.
+					$this->right.'<='.$owner->{$this->right};
 
 				if($root!==null)
-					$condition.=' AND `'.$this->root.'`='.$root;
+					$condition.=' AND '.$this->root.'='.$root;
 
 				$result=$owner->deleteAll($condition)>0;
 			}
@@ -520,12 +518,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		foreach(array($this->left,$this->right) as $key)
 		{
-			$condition='`'.$key.'`>='.$first;
+			$condition=$key.'>='.$first;
 
 			if($root!==null)
-				$condition.=' AND `'.$this->root.'`='.$root;
+				$condition.=' AND '.$this->root.'='.$root;
 
-			$owner->updateAll(array($key=>new CDbExpression('`'.$key.'`'.sprintf('%+d',$delta))),$condition);
+			$owner->updateAll(array($key=>new CDbExpression($key.sprintf('%+d',$delta))),$condition);
 		}
 	}
 
@@ -535,12 +533,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		foreach(array($this->left,$this->right) as $key)
 		{
-			$condition='`'.$key.'`>='.$first.' AND `'.$key.'`<='.$last;
+			$condition=$key.'>='.$first.' AND '.$key.'<='.$last;
 
 			if($root!==null)
-				$condition.=' AND `'.$this->root.'`='.$root;
+				$condition.=' AND '.$this->root.'='.$root;
 
-			$owner->updateAll(array($key=>new CDbExpression('`'.$key.'`'.sprintf('%+d',$delta))),$condition);
+			$owner->updateAll(array($key=>new CDbExpression($key.sprintf('%+d',$delta))),$condition);
 		}
 	}
 
@@ -648,12 +646,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 				$right+=$delta;
 			}
 
-			$condition='`'.$this->left.'`>='.$left.' AND `'.$this->right.'`<='.$right;
+			$condition=$this->left.'>='.$left.' AND '.$this->right.'<='.$right;
 
 			if($root!==null)
-				$condition.=' AND `'.$this->root.'`='.$root;
+				$condition.=' AND '.$this->root.'='.$root;
 
-			$owner->updateAll(array($this->level=>new CDbExpression('`'.$this->level.'`'.sprintf('%+d',$levelDiff))),$condition);
+			$owner->updateAll(array($this->level=>new CDbExpression($this->level.sprintf('%+d',$levelDiff))),$condition);
 
 			$this->shiftLeftRightRange($left,$right,$key-$left,$root);
 			$this->shiftLeftRight($right+1,-$delta,$root);
@@ -693,12 +691,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$diff=$key-$oldLeft;
 			$owner->updateAll(
 				array(
-					$this->left=>new CDbExpression('`'.$this->left.'`'.sprintf('%+d',$diff)),
-					$this->right=>new CDbExpression('`'.$this->right.'`'.sprintf('%+d',$diff)),
-					$this->level=>new CDbExpression('`'.$this->level.'`'.sprintf('%+d',$levelDiff)),
+					$this->left=>new CDbExpression($this->left.sprintf('%+d',$diff)),
+					$this->right=>new CDbExpression($this->right.sprintf('%+d',$diff)),
+					$this->level=>new CDbExpression($this->level.sprintf('%+d',$levelDiff)),
 					$this->root=>$newRoot,
 				),
-				'`'.$this->left.'`>='.$oldLeft.' AND `'.$this->right.'`<='.$oldRight.' AND `'.$this->root.'`='.$oldRoot
+				$this->left.'>='.$oldLeft.' AND '.$this->right.'<='.$oldRight.' AND '.$this->root.'='.$oldRoot
 			);
 
 			$this->shiftLeftRight($oldRight+1,$oldLeft-$oldRight-1,$oldRoot);
