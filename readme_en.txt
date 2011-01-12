@@ -6,7 +6,7 @@ AR models behavior that allows to work with nested sets tree.
 Installing and configuring
 --------------------------
 
-Create DB structure as shown in schema.sql.
+Create DB structure (see schema.sql or schema_with_many_roots.sql).
 
 Configure your model:
 
@@ -20,11 +20,11 @@ class Comment extends CActiveRecord {
                 // store multiple trees in one table
                 'hasManyRoots' => false,
                 // where to store each tree id. Not used when $hasManyRoots is false
-				'root' => 'root',
+				'rootAttribute' => 'root',
 				// required fields
-				'left' => 'lft',
-				'right' => 'rgt',
-				'level' => 'level',
+				'leftAttribute' => 'lft',
+				'rightAttribute' => 'rgt',
+				'levelAttribute' => 'level',
             ),
         );
     }
@@ -60,7 +60,7 @@ API
 
 ### Finders
 
-- parent() parent
+- getParent() parent
 - getPrevSibling() previous sibling
 - getNextSibling() next sibling
 

@@ -2,16 +2,16 @@
 /**
  * NestedSetBehavior
  *
- * @version 0.95
+ * @version 0.99
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
 {
 	public $hasManyRoots=false;
-	public $root='root';
-	public $left='lft';
-	public $right='rgt';
-	public $level='level';
+	public $rootAttribute='root';
+	public $leftAttribute='lft';
+	public $rightAttribute='rgt';
+	public $levelAttribute='level';
 	private $_ignoreEvent=false;
 
 	/**
@@ -22,20 +22,21 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function descendants($depth=null)
 	{
 		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
 		$criteria=$owner->getDbCriteria();
-		$alias=$owner->getTableAlias();
+		$alias=$db->quoteColumnName($owner->getTableAlias());
 
 		$criteria->mergeWith(array(
-			'condition'=>$alias.'.'.$this->left.'>'.$owner->{$this->left}.
-				' AND '.$alias.'.'.$this->right.'<'.$owner->{$this->right},
-			'order'=>$alias.'.'.$this->left,
+			'condition'=>$alias.'.'.$db->quoteColumnName($this->leftAttribute).'>'.$owner->{$this->leftAttribute}.
+				' AND '.$alias.'.'.$db->quoteColumnName($this->rightAttribute).'<'.$owner->{$this->rightAttribute},
+			'order'=>$alias.'.'.$db->quoteColumnName($this->leftAttribute),
 		));
 
 		if($depth!==null)
-			$criteria->addCondition($alias.'.'.$this->level.'<='.($owner->{$this->level}+$depth));
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->levelAttribute).'<='.($owner->{$this->levelAttribute}+$depth));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->{$this->root});
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
 
 		return $owner;
 	}
@@ -57,20 +58,21 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function ancestors($depth=null)
 	{
 		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
 		$criteria=$owner->getDbCriteria();
-		$alias=$owner->getTableAlias();
+		$alias=$db->quoteColumnName($owner->getTableAlias());
 
 		$criteria->mergeWith(array(
-			'condition'=>$alias.'.'.$this->left.'<'.$owner->{$this->left}.
-				' AND '.$alias.'.'.$this->right.'>'.$owner->{$this->right},
-			'order'=>$alias.'.'.$this->left,
+			'condition'=>$alias.'.'.$db->quoteColumnName($this->leftAttribute).'<'.$owner->{$this->leftAttribute}.
+				' AND '.$alias.'.'.$db->quoteColumnName($this->rightAttribute).'>'.$owner->{$this->rightAttribute},
+			'order'=>$alias.'.'.$db->quoteColumnName($this->leftAttribute),
 		));
 
 		if($depth!==null)
-			$criteria->addCondition($alias.'.'.$this->level.'>='.($owner->{$this->level}+$depth));
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->levelAttribute).'>='.($owner->{$this->levelAttribute}+$depth));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->{$this->root});
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
 
 		return $owner;
 	}
@@ -83,7 +85,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function roots()
 	{
 		$owner=$this->getOwner();
-		$owner->getDbCriteria()->addCondition($owner->getTableAlias().'.'.$this->left.'=1');
+		$db=$owner->getDbConnection();
+		$owner->getDbCriteria()->addCondition($db->quoteColumnName($owner->getTableAlias()).'.'.$db->quoteColumnName($this->leftAttribute).'=1');
 
 		return $owner;
 	}
@@ -92,20 +95,21 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Gets record of node parent.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function parent()
+	public function getParent()
 	{
 		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
 		$criteria=$owner->getDbCriteria();
-		$alias=$owner->getTableAlias();
+		$alias=$db->quoteColumnName($owner->getTableAlias());
 
 		$criteria->mergeWith(array(
-			'condition'=>$alias.'.'.$this->left.'<'.$owner->{$this->left}.
-				' AND '.$alias.'.'.$this->right.'>'.$owner->{$this->right},
-			'order'=>$alias.'.'.$this->right,
+			'condition'=>$alias.'.'.$db->quoteColumnName($this->leftAttribute).'<'.$owner->{$this->leftAttribute}.
+				' AND '.$alias.'.'.$db->quoteColumnName($this->rightAttribute).'>'.$owner->{$this->rightAttribute},
+			'order'=>$alias.'.'.$db->quoteColumnName($this->rightAttribute),
 		));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$this->root.'='.$owner->{$this->root});
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
 
 		return $owner->find();
 	}
@@ -114,30 +118,36 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 * Gets record of previous sibling.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function getPrevSibling() //TODO: переименовать в prev()?
+	public function getPrevSibling()
 	{
 		$owner=$this->getOwner();
-		$condition=$this->right.'='.($owner->{$this->left}-1);
+		$db=$owner->getDbConnection();
+		$criteria=$owner->getDbCriteria();
+		$alias=$db->quoteColumnName($owner->getTableAlias());
+		$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rightAttribute).'='.($owner->{$this->leftAttribute}-1));
 
 		if($this->hasManyRoots)
-			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
 
-		return $owner->find($condition);
+		return $owner->find();
 	}
 
 	/**
 	 * Gets record of next sibling.
 	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
-	public function getNextSibling() //TODO: переименовать в next()?
+	public function getNextSibling()
 	{
 		$owner=$this->getOwner();
-		$condition=$this->left.'='.($owner->{$this->right}+1);
+		$db=$owner->getDbConnection();
+		$criteria=$owner->getDbCriteria();
+		$alias=$db->quoteColumnName($owner->getTableAlias());
+		$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->leftAttribute).'='.($owner->{$this->rightAttribute}+1));
 
 		if($this->hasManyRoots)
-			$condition.=' AND '.$this->root.'='.$owner->{$this->root};
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
 
-		return $owner->find($condition);
+		return $owner->find();
 	}
 
 	/**
@@ -178,11 +188,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($owner->getIsNewRecord())
 			throw new CDbException(Yii::t('yiiext','The node cannot be deleted because it is new.'));
 
-		$transaction=$owner->getDbConnection()->beginTransaction();
+		$db=$owner->getDbConnection();
+		$transaction=$db->beginTransaction();
 
 		try
 		{
-			$root=$this->hasManyRoots ? $owner->{$this->root} : null;
+			$root=$this->hasManyRoots ? $owner->{$this->rootAttribute} : null;
 
 			if($owner->isLeaf())
 			{
@@ -192,19 +203,19 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			}
 			else
 			{
-				$condition=$this->left.'>='.$owner->{$this->left}.' AND '.
-					$this->right.'<='.$owner->{$this->right};
+				$condition=$db->quoteColumnName($this->leftAttribute).'>='.$owner->{$this->leftAttribute}.' AND '.
+					$db->quoteColumnName($this->rightAttribute).'<='.$owner->{$this->rightAttribute};
 
 				if($root!==null)
-					$condition.=' AND '.$this->root.'='.$root;
+					$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$root;
 
 				$result=$owner->deleteAll($condition)>0;
 			}
 
 			if($result)
 			{
-				$first=$owner->{$this->right}+1;
-				$delta=$owner->{$this->left}-$owner->{$this->right}-1;
+				$first=$owner->{$this->rightAttribute}+1;
+				$delta=$owner->{$this->leftAttribute}-$owner->{$this->rightAttribute}-1;
 				$this->shiftLeftRight($first,$delta,$root);
 				$transaction->commit();
 
@@ -253,10 +264,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-			$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
 
-		$owner->{$this->level}=$target->{$this->level}+1;
-		$key=$target->{$this->left}+1;
+		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute}+1;
+		$key=$target->{$this->leftAttribute}+1;
 
 		return $this->addNode($key,$attributes);
 	}
@@ -290,10 +301,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-			$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
 
-		$owner->{$this->level}=$target->{$this->level}+1;
-		$key=$target->{$this->right};
+		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute}+1;
+		$key=$target->{$this->rightAttribute};
 
 		return $this->addNode($key,$attributes);
 	}
@@ -320,10 +331,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-			$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
 
-		$owner->{$this->level}=$target->{$this->level};
-		$key=$target->{$this->left};
+		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute};
+		$key=$target->{$this->leftAttribute};
 
 		return $this->addNode($key,$attributes);
 	}
@@ -350,10 +361,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			return false;
 
 		if($this->hasManyRoots)
-			$owner->{$this->root}=$target->{$this->root};
+			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
 
-		$owner->{$this->level}=$target->{$this->level};
-		$key=$target->{$this->right}+1;
+		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute};
+		$key=$target->{$this->rightAttribute}+1;
 
 		return $this->addNode($key,$attributes);
 	}
@@ -379,10 +390,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->left},$target->{$this->level}-$owner->{$this->level});
+		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
+			return $this->moveBetweenTrees($target,$target->{$this->leftAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
 		else
-			return $this->moveNode($target->{$this->left},$target->{$this->level}-$owner->{$this->level});
+			return $this->moveNode($target->{$this->leftAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
 	}
 
 	/**
@@ -406,10 +417,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isRoot())
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
-		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->right}+1,$target->{$this->level}-$owner->{$this->level});
+		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
+			return $this->moveBetweenTrees($target,$target->{$this->rightAttribute}+1,$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
 		else
-			return $this->moveNode($target->{$this->right}+1,$target->{$this->level}-$owner->{$this->level});
+			return $this->moveNode($target->{$this->rightAttribute}+1,$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
 	}
 
 	/**
@@ -430,10 +441,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isDescendantOf($owner))
 			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
 
-		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->left}+1,$target->{$this->level}-$owner->{$this->level}+1);
+		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
+			return $this->moveBetweenTrees($target,$target->{$this->leftAttribute}+1,$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
 		else
-			return $this->moveNode($target->{$this->left}+1,$target->{$this->level}-$owner->{$this->level}+1);
+			return $this->moveNode($target->{$this->leftAttribute}+1,$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
 	}
 
 	/**
@@ -454,10 +465,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($target->isDescendantOf($owner))
 			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
 
-		if($this->hasManyRoots && $owner->{$this->root}!==$target->{$this->root})
-			return $this->moveBetweenTrees($target,$target->{$this->right},$target->{$this->level}-$owner->{$this->level}+1);
+		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
+			return $this->moveBetweenTrees($target,$target->{$this->rightAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
 		else
-			return $this->moveNode($target->{$this->right},$target->{$this->level}-$owner->{$this->level}+1);
+			return $this->moveNode($target->{$this->rightAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
 	}
 
 	/**
@@ -467,11 +478,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function isDescendantOf($subj)
 	{
 		$owner=$this->getOwner();
-		$result=($owner->{$this->left}>$subj->{$this->left})
-			&& ($owner->{$this->right}<$subj->{$this->right});
+		$result=($owner->{$this->leftAttribute}>$subj->{$this->leftAttribute})
+			&& ($owner->{$this->rightAttribute}<$subj->{$this->rightAttribute});
 
 		if($this->hasManyRoots)
-			$result=$result && ($owner->{$this->root}===$subj->{$this->root});
+			$result=$result && ($owner->{$this->rootAttribute}===$subj->{$this->rootAttribute});
 
 		return $result;
 	}
@@ -484,7 +495,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	{
 		$owner=$this->getOwner();
 
-		return $owner->{$this->right}-$owner->{$this->left}===1;
+		return $owner->{$this->rightAttribute}-$owner->{$this->leftAttribute}===1;
 	}
 
 	/**
@@ -493,7 +504,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function isRoot()
 	{
-		return $this->getOwner()->{$this->left}==1;
+		return $this->getOwner()->{$this->leftAttribute}==1;
 	}
 
 	public function beforeSave($event)
@@ -515,30 +526,32 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	protected function shiftLeftRight($first,$delta,$root)
 	{
 		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
 
-		foreach(array($this->left,$this->right) as $key)
+		foreach(array($this->leftAttribute,$this->rightAttribute) as $key)
 		{
-			$condition=$key.'>='.$first;
+			$condition=$db->quoteColumnName($key).'>='.$first;
 
 			if($root!==null)
-				$condition.=' AND '.$this->root.'='.$root;
+				$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$root;
 
-			$owner->updateAll(array($key=>new CDbExpression($key.sprintf('%+d',$delta))),$condition);
+			$owner->updateAll(array($key=>new CDbExpression($db->quoteColumnName($key).sprintf('%+d',$delta))),$condition);
 		}
 	}
 
 	protected function shiftLeftRightRange($first,$last,$delta,$root)
 	{
 		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
 
-		foreach(array($this->left,$this->right) as $key)
+		foreach(array($this->leftAttribute,$this->rightAttribute) as $key)
 		{
-			$condition=$key.'>='.$first.' AND '.$key.'<='.$last;
+			$condition=$db->quoteColumnName($key).'>='.$first.' AND '.$db->quoteColumnName($key).'<='.$last;
 
 			if($root!==null)
-				$condition.=' AND '.$this->root.'='.$root;
+				$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$root;
 
-			$owner->updateAll(array($key=>new CDbExpression($key.sprintf('%+d',$delta))),$condition);
+			$owner->updateAll(array($key=>new CDbExpression($db->quoteColumnName($key).sprintf('%+d',$delta))),$condition);
 		}
 	}
 
@@ -553,9 +566,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$this->shiftLeftRight($key,2,$this->hasManyRoots ? $owner->{$this->root} : null);
-			$owner->{$this->left}=$key;
-			$owner->{$this->right}=$key+1;
+			$this->shiftLeftRight($key,2,$this->hasManyRoots ? $owner->{$this->rootAttribute} : null);
+			$owner->{$this->leftAttribute}=$key;
+			$owner->{$this->rightAttribute}=$key+1;
 			$this->_ignoreEvent=true;
 			$result=$owner->insert($attributes);
 			$this->_ignoreEvent=false;
@@ -593,17 +606,17 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$owner->{$this->left}=1;
-			$owner->{$this->right}=2;
-			$owner->{$this->level}=1;
+			$owner->{$this->leftAttribute}=1;
+			$owner->{$this->rightAttribute}=2;
+			$owner->{$this->levelAttribute}=1;
 			$this->_ignoreEvent=true;
 			$result=$owner->insert($attributes);
 			$this->_ignoreEvent=false;
 
 			if($result)
 			{
-				$pk=$owner->{$this->root}=$owner->getPrimaryKey();
-				$owner->updateByPk($pk,array($this->root=>$pk));
+				$pk=$owner->{$this->rootAttribute}=$owner->getPrimaryKey();
+				$owner->updateByPk($pk,array($this->rootAttribute=>$pk));
 
 				if($extTransFlag===null)
 					$transaction->commit();
@@ -633,10 +646,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$left=$owner->{$this->left};
-			$right=$owner->{$this->right};
+			$left=$owner->{$this->leftAttribute};
+			$right=$owner->{$this->rightAttribute};
 			$delta=$right-$left+1;
-			$root=$this->hasManyRoots ? $owner->{$this->root} : null;
+			$root=$this->hasManyRoots ? $owner->{$this->rootAttribute} : null;
 
 			$this->shiftLeftRight($key,$delta,$root);
 
@@ -646,12 +659,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 				$right+=$delta;
 			}
 
-			$condition=$this->left.'>='.$left.' AND '.$this->right.'<='.$right;
+			$condition=$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.$db->quoteColumnName($this->rightAttribute).'<='.$right;
 
 			if($root!==null)
-				$condition.=' AND '.$this->root.'='.$root;
+				$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$root;
 
-			$owner->updateAll(array($this->level=>new CDbExpression($this->level.sprintf('%+d',$levelDiff))),$condition);
+			$owner->updateAll(array($this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDiff))),$condition);
 
 			$this->shiftLeftRightRange($left,$right,$key-$left,$root);
 			$this->shiftLeftRight($right+1,-$delta,$root);
@@ -681,22 +694,24 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 		try
 		{
-			$newRoot=$target->{$this->root};
-			$oldRoot=$owner->{$this->root};
-			$oldLeft=$owner->{$this->left};
-			$oldRight=$owner->{$this->right};
+			$newRoot=$target->{$this->rootAttribute};
+			$oldRoot=$owner->{$this->rootAttribute};
+			$oldLeft=$owner->{$this->leftAttribute};
+			$oldRight=$owner->{$this->rightAttribute};
 
 			$this->shiftLeftRight($key,$oldRight-$oldLeft+1,$newRoot);
 
 			$diff=$key-$oldLeft;
 			$owner->updateAll(
 				array(
-					$this->left=>new CDbExpression($this->left.sprintf('%+d',$diff)),
-					$this->right=>new CDbExpression($this->right.sprintf('%+d',$diff)),
-					$this->level=>new CDbExpression($this->level.sprintf('%+d',$levelDiff)),
-					$this->root=>$newRoot,
+					$this->leftAttribute=>new CDbExpression($db->quoteColumnName($this->leftAttribute).sprintf('%+d',$diff)),
+					$this->rightAttribute=>new CDbExpression($db->quoteColumnName($this->rightAttribute).sprintf('%+d',$diff)),
+					$this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDiff)),
+					$this->rootAttribute=>$newRoot,
 				),
-				$this->left.'>='.$oldLeft.' AND '.$this->right.'<='.$oldRight.' AND '.$this->root.'='.$oldRoot
+				$db->quoteColumnName($this->leftAttribute).'>='.$oldLeft.' AND '.
+				$db->quoteColumnName($this->rightAttribute).'<='.$oldRight.' AND '.
+				$db->quoteColumnName($this->rootAttribute).'='.$oldRoot
 			);
 
 			$this->shiftLeftRight($oldRight+1,$oldLeft-$oldRight-1,$oldRoot);

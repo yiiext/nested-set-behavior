@@ -7,7 +7,7 @@ Nested Set
 Установка и настройка
 ---------------------
 
-Создать необходимые поля в таблице БД (см. schema.sql).
+Создать необходимые поля в таблице БД (см. schema.sql или schema_with_many_roots.sql).
 
 Сконфигурировать модель:
 
@@ -21,11 +21,11 @@ class Comment extends CActiveRecord {
                 // хранить ли множество деревьев в одной таблице
                 'hasManyRoots' => false,
                 // поле для хранения идентификатора дерева при $hasManyRoots=false; не используется
-				'root' => 'root',
+				'rootAttribute' => 'root',
 				// обязательные поля для NS
-				'left' => 'lft',
-				'right' => 'rgt',
-				'level' => 'level',
+				'leftAttribute' => 'lft',
+				'rightAttribute' => 'rgt',
+				'levelAttribute' => 'level',
             ),
         );
     }
@@ -53,7 +53,7 @@ $comments=$root->descendants()->findAll();
 Краткое описание API
 --------------------
 
-### Именовынные группы условий AR
+### Именованные группы условий AR
 
 - descendants($depth=null) выбирать потомков
 - children() выбирать прямых потомков
@@ -62,7 +62,7 @@ $comments=$root->descendants()->findAll();
 
 ### Методы поиска
 
-- parent() родитель
+- getParent() родитель
 - getPrevSibling() предыдущий сосед
 - getNextSibling() следующий сосед
 
