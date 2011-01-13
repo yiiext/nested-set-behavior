@@ -1,18 +1,20 @@
 0.99
 ----
-[+] Unit tests for many roots mode off added (creocoder)
-[*] All attributes now correct quoted (creocoder)
-[*] Some API changes (creocoder)
+- Added Unit tests for single root mode (creocoder)
+- All attributes are now correctly quoted (creocoder)
+- Renamed fields: root → rootAttribute, left → leftAttribute, right → rightAttribute,
+  level → levelAttribute (creocoder)
+- Renamed method parent → getParent.
 
 0.95
 ----
-[+] Unit tests added (creocoder)
-[*] Incorrect usage of save() and delete() instead of behavior's saveNode() and deleteNode() is now detected (creocoder)
+- Unit tests added (creocoder)
+- Incorrect usage of save() and delete() instead of behavior's saveNode() and deleteNode() is now detected (creocoder)
 
 0.90
 ----
-[+] Moving a node to a different root is now supported (creocoder)
+- Moving a node to a different root is now supported (creocoder)
 
 0.85
 ----
-[*] Initial public release (creocoder)
+- Initial public release (creocoder)
