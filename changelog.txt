@@ -1,10 +1,11 @@
 0.99
 ----
+- Added note about removing fields from `rules` (Sam Dark)
 - Added Unit tests for single root mode (creocoder)
 - All attributes are now correctly quoted (creocoder)
 - Renamed fields: root → rootAttribute, left → leftAttribute, right → rightAttribute,
   level → levelAttribute (creocoder)
-- Renamed method parent → getParent.
+- Renamed method parent → getParent (creocoder)
 
 0.95
 ----

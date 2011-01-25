@@ -31,6 +31,8 @@ class Comment extends CActiveRecord {
 }
 ~~~
 
+Remove validation rules for `root`, `lft`, `rgt` and `level` from `rules` method.
+
 Usage
 -----
 

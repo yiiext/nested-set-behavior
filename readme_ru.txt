@@ -32,6 +32,8 @@ class Comment extends CActiveRecord {
 }
 ~~~
 
+Убрать из `rules` модели всё, что относится к полям `root`, `lft`, `rgt` и `level`.
+
 Использование
 -------------
 
