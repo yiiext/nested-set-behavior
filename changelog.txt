@@ -1,11 +1,18 @@
+0.99b
+----
+- Allow to use multiply change tree operations (creocoder)
+- Method saveNode() now create root in "single root mode" (creocoder)
+- Unit tests refactored (creocoder)
+- Some behavior refactoring (creocoder)
+
 0.99
 ----
 - Added note about removing fields from `rules` (Sam Dark)
 - Added Unit tests for single root mode (creocoder)
 - All attributes are now correctly quoted (creocoder)
-- Renamed fields: root → rootAttribute, left → leftAttribute, right → rightAttribute,
-  level → levelAttribute (creocoder)
-- Renamed method parent → getParent (creocoder)
+- Renamed fields: 'root'=>'rootAttribute', 'left'=>'leftAttribute', 'right'=>'rightAttribute',
+  'level'=>'levelAttribute' (creocoder)
+- Renamed method parent() => getParent() (creocoder)
 
 0.95
 ----
