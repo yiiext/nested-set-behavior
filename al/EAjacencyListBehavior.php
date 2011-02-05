@@ -2,7 +2,7 @@
 /**
  * AjacencyListBehavior
  *
- * @version 0.01
+ * @version 0.01 (skeleton)
  * @author creocoder <creocoder@gmail.com>
  */
 class EAjacencyListBehavior extends CActiveRecordBehavior
@@ -25,6 +25,14 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 	 */
 	public function descendants($depth)
 	{
+		$owner=$this->getOwner();
+
+		if($depth>1)
+		{
+			// add virtual relations
+		}
+
+		return $owner;
 	}
 
 	/**
@@ -121,6 +129,14 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 	public function append($target,$runValidation=true,$attributes=null)
 	{
 		return $target->appendTo($this->getOwner(),$runValidation,$attributes);
+	}
+
+	/**
+	 * Move node as last child of target.
+	 * @return boolean whether the moving succeeds
+	 */
+	public function moveAsLast($target)
+	{
 	}
 
 	/**
