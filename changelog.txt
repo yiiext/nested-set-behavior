@@ -1,3 +1,8 @@
+1.00
+----
+- Some behavior refactoring before release (creocoder)
+- Advanced doc added (creocoder)
+
 0.99b
 ----
 - Allow to use multiply change tree operations (creocoder)

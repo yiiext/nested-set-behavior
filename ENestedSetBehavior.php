@@ -2,10 +2,7 @@
 /**
  * NestedSetBehavior
  *
- * TODO: add @throws to comments
- * TODO: check owner and target class to prevent errors
- *
- * @version 0.99b
+ * @version 1.00
  * @author creocoder <creocoder@gmail.com>
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -23,8 +20,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets descendants for node.
-	 * @param int depth.
-	 * @return CActiveRecord the owner.
+	 * @param int depth
+	 * @return CActiveRecord the owner
 	 */
 	public function descendants($depth=null)
 	{
@@ -50,7 +47,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets children for node (direct descendants only).
-	 * @return CActiveRecord the owner.
+	 * @return CActiveRecord the owner
 	 */
 	public function children()
 	{
@@ -60,7 +57,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	/**
 	 * Named scope. Gets ancestors for node.
 	 * @param int depth.
-	 * @return CActiveRecord the owner.
+	 * @return CActiveRecord the owner
 	 */
 	public function ancestors($depth=null)
 	{
@@ -86,8 +83,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets root node(s).
-	 * @param int depth.
-	 * @return CActiveRecord the owner.
+	 * @param int depth
+	 * @return CActiveRecord the owner
 	 */
 	public function roots()
 	{
@@ -100,7 +97,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Gets record of node parent.
-	 * @return CActiveRecord the record found. Null if no record is found.
+	 * @return CActiveRecord the record found. Null if no record is found
 	 */
 	public function getParent()
 	{
@@ -123,7 +120,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Gets record of previous sibling.
-	 * @return CActiveRecord the record found. Null if no record is found.
+	 * @return CActiveRecord the record found. Null if no record is found
 	 */
 	public function getPrevSibling()
 	{
@@ -141,7 +138,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Gets record of next sibling.
-	 * @return CActiveRecord the record found. Null if no record is found.
+	 * @return CActiveRecord the record found. Null if no record is found
 	 */
 	public function getNextSibling()
 	{
@@ -159,7 +156,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Create root node if multiple-root tree mode. Update node if it's not new.
-	 * @return boolean whether the saving succeeds.
+	 * @return boolean whether the saving succeeds
 	 */
 	public function save($runValidation=true,$attributes=null)
 	{
@@ -185,7 +182,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Deletes node and it's descendants.
-	 * @return boolean whether the deletion is successful.
+	 * @return boolean whether the deletion is successful
 	 */
 	public function delete()
 	{
@@ -219,50 +216,25 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 				$result=$owner->deleteAll($condition)>0;
 			}
 
-			if($result)
+			if(!$result)
 			{
-				$this->shiftLeftRight($owner->{$this->rightAttribute}+1,$owner->{$this->leftAttribute}-$owner->{$this->rightAttribute}-1);
-				$transaction->commit();
-				$this->correctCachedOnDelete();
+				$transaction->rollBack();
 
-				return true;
+				return false;
 			}
+
+			$this->shiftLeftRight($owner->{$this->rightAttribute}+1,$owner->{$this->leftAttribute}-$owner->{$this->rightAttribute}-1);
+			$transaction->commit();
+			$this->correctCachedOnDelete();
 		}
 		catch(Exception $e)
 		{
 			$transaction->rollBack();
+
+			throw $e;
 		}
 
-		return false;
-	}
-
-	protected function correctCachedOnDelete()
-	{
-		$owner=$this->getOwner();
-		$left=$owner->{$this->leftAttribute};
-		$right=$owner->{$this->rightAttribute};
-		$key=$right+1;
-		$delta=$left-$right-1;
-
-		foreach(self::$_cached[get_class($owner)] as $node)
-		{
-			if($node->getIsNewRecord() || $node->getIsDeletedRecord())
-				continue;
-
-			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$node->{$this->rootAttribute})
-				continue;
-
-			if($node->{$this->leftAttribute}>=$left && $node->{$this->rightAttribute}<=$right)
-				$node->setIsDeletedRecord(true);
-			else
-			{
-				if($node->{$this->leftAttribute}>=$key)
-					$node->{$this->leftAttribute}+=$delta;
-
-				if($node->{$this->rightAttribute}>=$key)
-					$node->{$this->rightAttribute}+=$delta;
-			}
-		}
+		return true;
 	}
 
 	public function deleteNode()
@@ -272,38 +244,16 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Prepends node to target as first child.
-	 * @return boolean whether the prepending succeeds.
+	 * @return boolean whether the prepending succeeds
 	 */
 	public function prependTo($target,$runValidation=true,$attributes=null)
 	{
-		$owner=$this->getOwner();
-
-		if(!$owner->getIsNewRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because target node is deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($runValidation && !$owner->validate())
-			return false;
-
-		if($this->hasManyRoots)
-			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
-
-		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute}+1;
-
-		return $this->addNode($target->{$this->leftAttribute}+1,$attributes);
+		return $this->addNode($target,$target->{$this->leftAttribute}+1,1,$runValidation,$attributes);
 	}
 
 	/**
 	 * Prepends target to node as first child.
-	 * @return boolean whether the prepending succeeds.
+	 * @return boolean whether the prepending succeeds
 	 */
 	public function prepend($target,$runValidation=true,$attributes=null)
 	{
@@ -312,38 +262,16 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Appends node to target as last child.
-	 * @return boolean whether the appending succeeds.
+	 * @return boolean whether the appending succeeds
 	 */
 	public function appendTo($target,$runValidation=true,$attributes=null)
 	{
-		$owner=$this->getOwner();
-
-		if(!$owner->getIsNewRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because target node is deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($runValidation && !$owner->validate())
-			return false;
-
-		if($this->hasManyRoots)
-			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
-
-		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute}+1;
-
-		return $this->addNode($target->{$this->rightAttribute},$attributes);
+		return $this->addNode($target,$target->{$this->rightAttribute},1,$runValidation,$attributes);
 	}
 
 	/**
 	 * Appends target to node as last child.
-	 * @return boolean whether the appending succeeds.
+	 * @return boolean whether the appending succeeds
 	 */
 	public function append($target,$runValidation=true,$attributes=null)
 	{
@@ -352,192 +280,56 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Inserts node as previous sibling of target.
-	 * @return boolean whether the inserting succeeds.
+	 * @return boolean whether the inserting succeeds
 	 */
 	public function insertBefore($target,$runValidation=true,$attributes=null)
 	{
-		$owner=$this->getOwner();
-
-		if(!$owner->getIsNewRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because target node is deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isRoot())
-			throw new CException(Yii::t('yiiext','The target node should not be root.'));
-
-		if($runValidation && !$owner->validate())
-			return false;
-
-		if($this->hasManyRoots)
-			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
-
-		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute};
-
-		return $this->addNode($target->{$this->leftAttribute},$attributes);
+		return $this->addNode($target,$target->{$this->leftAttribute},0,$runValidation,$attributes);
 	}
 
 	/**
 	 * Inserts node as next sibling of target.
-	 * @return boolean whether the inserting succeeds.
+	 * @return boolean whether the inserting succeeds
 	 */
 	public function insertAfter($target,$runValidation=true,$attributes=null)
 	{
-		$owner=$this->getOwner();
-
-		if(!$owner->getIsNewRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because target node is deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isRoot())
-			throw new CException(Yii::t('yiiext','The target node should not be root.'));
-
-		if($runValidation && !$owner->validate())
-			return false;
-
-		if($this->hasManyRoots)
-			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
-
-		$owner->{$this->levelAttribute}=$target->{$this->levelAttribute};
-
-		return $this->addNode($target->{$this->rightAttribute}+1,$attributes);
+		return $this->addNode($target,$target->{$this->rightAttribute}+1,0,$runValidation,$attributes);
 	}
 
 	/**
 	 * Move node as previous sibling of target.
-	 * @return boolean whether the moving succeeds.
+	 * @return boolean whether the moving succeeds
 	 */
 	public function moveBefore($target)
 	{
-		$owner=$this->getOwner();
-
-		if($owner->getIsNewRecord())
-			throw new CException(Yii::t('yiiext','The node should not be new record.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node should not be deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The target node should not be deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isDescendantOf($owner))
-			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
-
-		if($target->isRoot())
-			throw new CException(Yii::t('yiiext','The target node should not be root.'));
-
-		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
-			return $this->moveBetweenTrees($target->{$this->leftAttribute},$target->{$this->rootAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
-		else
-			return $this->moveNode($target->{$this->leftAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
+		return $this->moveNode($target,$target->{$this->leftAttribute},0);
 	}
 
 	/**
 	 * Move node as next sibling of target.
-	 * @return boolean whether the moving succeeds.
+	 * @return boolean whether the moving succeeds
 	 */
 	public function moveAfter($target)
 	{
-		$owner=$this->getOwner();
-
-		if($owner->getIsNewRecord())
-			throw new CException(Yii::t('yiiext','The node should not be new record.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node should not be deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The target node should not be deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isDescendantOf($owner))
-			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
-
-		if($target->isRoot())
-			throw new CException(Yii::t('yiiext','The target node should not be root.'));
-
-		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
-			return $this->moveBetweenTrees($target->{$this->rightAttribute}+1,$target->{$this->rootAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
-		else
-			return $this->moveNode($target->{$this->rightAttribute}+1,$target->{$this->levelAttribute}-$owner->{$this->levelAttribute});
+		return $this->moveNode($target,$target->{$this->rightAttribute}+1,0);
 	}
 
 	/**
 	 * Move node as first child of target.
-	 * @return boolean whether the moving succeeds.
+	 * @return boolean whether the moving succeeds
 	 */
 	public function moveAsFirst($target)
 	{
-		$owner=$this->getOwner();
-
-		if($owner->getIsNewRecord())
-			throw new CException(Yii::t('yiiext','The node should not be new record.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node should not be deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The target node should not be deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isDescendantOf($owner))
-			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
-
-		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
-			return $this->moveBetweenTrees($target->{$this->leftAttribute}+1,$target->{$this->rootAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
-		else
-			return $this->moveNode($target->{$this->leftAttribute}+1,$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
+		return $this->moveNode($target,$target->{$this->leftAttribute}+1,1);
 	}
 
 	/**
 	 * Move node as last child of target.
-	 * @return boolean whether the moving succeeds.
+	 * @return boolean whether the moving succeeds
 	 */
 	public function moveAsLast($target)
 	{
-		$owner=$this->getOwner();
-
-		if($owner->getIsNewRecord())
-			throw new CException(Yii::t('yiiext','The node should not be new record.'));
-
-		if($this->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The node should not be deleted.'));
-
-		if($target->getIsDeletedRecord())
-			throw new CDbException(Yii::t('yiiext','The target node should not be deleted.'));
-
-		if($owner->equals($target))
-			throw new CException(Yii::t('yiiext','The target node should not be self.'));
-
-		if($target->isDescendantOf($owner))
-			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
-
-		if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
-			return $this->moveBetweenTrees($target->{$this->rightAttribute},$target->{$this->rootAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
-		else
-			return $this->moveNode($target->{$this->rightAttribute},$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+1);
+		return $this->moveNode($target,$target->{$this->rightAttribute},1);
 	}
 
 	/**
@@ -614,25 +406,47 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::delete() method when ENestedSetBehavior attached.'));
 	}
 
-	protected function shiftLeftRight($first,$delta)
+	protected function shiftLeftRight($key,$delta)
 	{
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
 
-		foreach(array($this->leftAttribute,$this->rightAttribute) as $key)
+		foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
 		{
-			$condition=$db->quoteColumnName($key).'>='.$first;
+			$condition=$db->quoteColumnName($attribute).'>='.$key;
 
 			if($this->hasManyRoots)
 				$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute};
 
-			$owner->updateAll(array($key=>new CDbExpression($db->quoteColumnName($key).sprintf('%+d',$delta))),$condition);
+			$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$delta))),$condition);
 		}
 	}
 
-	protected function addNode($key,$attributes)
+	protected function addNode($target,$key,$levelUp,$runValidation,$attributes)
 	{
 		$owner=$this->getOwner();
+
+		if(!$owner->getIsNewRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is not new.'));
+
+		if($this->getIsDeletedRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because it is deleted.'));
+
+		if($target->getIsDeletedRecord())
+			throw new CDbException(Yii::t('yiiext','The node cannot be inserted because target node is deleted.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if(!$levelUp && $target->isRoot())
+			throw new CException(Yii::t('yiiext','The target node should not be root.'));
+
+		if($runValidation && !$owner->validate())
+			return false;
+
+		if($this->hasManyRoots)
+			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
+
 		$db=$owner->getDbConnection();
 		$extTransFlag=$db->getCurrentTransaction();
 
@@ -644,49 +458,33 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$this->shiftLeftRight($key,2);
 			$owner->{$this->leftAttribute}=$key;
 			$owner->{$this->rightAttribute}=$key+1;
+			$owner->{$this->levelAttribute}=$target->{$this->levelAttribute}+$levelUp;
 			$this->_ignoreEvent=true;
 			$result=$owner->insert($attributes);
 			$this->_ignoreEvent=false;
 
-			if($result)
+			if(!$result)
 			{
 				if($extTransFlag===null)
-					$transaction->commit();
+					$transaction->rollBack();
 
-				$this->correctCachedOnAddNode($key);
-
-				return true;
+				return false;
 			}
-			else if($extTransFlag===null)
-				$transaction->rollBack();
+
+			if($extTransFlag===null)
+				$transaction->commit();
+
+			$this->correctCachedOnAddNode($key);
 		}
 		catch(Exception $e)
 		{
 			if($extTransFlag===null)
 				$transaction->rollBack();
+
+			throw $e;
 		}
 
-		return false;
-	}
-
-	protected function correctCachedOnAddNode($key)
-	{
-		$owner=$this->getOwner();
-
-		foreach(self::$_cached[get_class($owner)] as $node)
-		{
-			if($node->getIsNewRecord() || $node->getIsDeletedRecord())
-				continue;
-
-			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$node->{$this->rootAttribute})
-				continue;
-
-			if($node->{$this->leftAttribute}>=$key)
-				$node->{$this->leftAttribute}+=2;
-
-			if($node->{$this->rightAttribute}>=$key)
-				$node->{$this->rightAttribute}+=2;
-		}
+		return true;
 	}
 
 	protected function makeRoot($attributes)
@@ -710,23 +508,26 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 				$result=$owner->insert($attributes);
 				$this->_ignoreEvent=false;
 
-				if($result)
+				if(!$result)
 				{
-					$pk=$owner->{$this->rootAttribute}=$owner->getPrimaryKey();
-					$owner->updateByPk($pk,array($this->rootAttribute=>$pk));
-
 					if($extTransFlag===null)
-						$transaction->commit();
+						$transaction->rollBack();
 
-					return true;
+					return false;
 				}
-				else if($extTransFlag===null)
-					$transaction->rollBack();
+
+				$pk=$owner->{$this->rootAttribute}=$owner->getPrimaryKey();
+				$owner->updateByPk($pk,array($this->rootAttribute=>$pk));
+
+				if($extTransFlag===null)
+					$transaction->commit();
 			}
 			catch(Exception $e)
 			{
 				if($extTransFlag===null)
 					$transaction->rollBack();
+
+				throw $e;
 			}
 		}
 		else
@@ -738,16 +539,35 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$result=$owner->insert($attributes);
 			$this->_ignoreEvent=false;
 
-			if($result)
-				return true;
+			if(!$result)
+				return false;
 		}
 
-		return false;
+		return true;
 	}
 
-	protected function moveNode($key,$levelDiff)
+	protected function moveNode($target,$key,$levelUp)
 	{
 		$owner=$this->getOwner();
+
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($this->getIsDeletedRecord())
+			throw new CDbException(Yii::t('yiiext','The node should not be deleted.'));
+
+		if($target->getIsDeletedRecord())
+			throw new CDbException(Yii::t('yiiext','The target node should not be deleted.'));
+
+		if($owner->equals($target))
+			throw new CException(Yii::t('yiiext','The target node should not be self.'));
+
+		if($target->isDescendantOf($owner))
+			throw new CException(Yii::t('yiiext','The target node should not be descendant.'));
+
+		if(!$levelUp && $target->isRoot())
+			throw new CException(Yii::t('yiiext','The target node should not be root.'));
+
 		$db=$owner->getDbConnection();
 		$extTransFlag=$db->getCurrentTransaction();
 
@@ -758,54 +578,136 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		{
 			$left=$owner->{$this->leftAttribute};
 			$right=$owner->{$this->rightAttribute};
-			$delta=$right-$left+1;
-			$this->shiftLeftRight($key,$delta);
+			$levelDelta=$target->{$this->levelAttribute}-$owner->{$this->levelAttribute}+$levelUp;
 
-			if($left>=$key)
+			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$target->{$this->rootAttribute})
 			{
-				$left+=$delta;
-				$right+=$delta;
+				foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
+				{
+					$condition=$db->quoteColumnName($attribute).'>='.$key.' AND '.$db->quoteColumnName($this->rootAttribute).'='.$target->{$this->rootAttribute};
+					$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$right-$left+1))),$condition);
+				}
+
+				$delta=$key-$left;
+				$owner->updateAll(
+					array(
+						$this->leftAttribute=>new CDbExpression($db->quoteColumnName($this->leftAttribute).sprintf('%+d',$delta)),
+						$this->rightAttribute=>new CDbExpression($db->quoteColumnName($this->rightAttribute).sprintf('%+d',$delta)),
+						$this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDelta)),
+						$this->rootAttribute=>$target->{$this->rootAttribute},
+					),
+					$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.
+					$db->quoteColumnName($this->rightAttribute).'<='.$right.' AND '.
+					$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute}
+				);
+
+				$this->shiftLeftRight($right+1,$left-$right-1);
+
+				if($extTransFlag===null)
+					$transaction->commit();
+
+				$this->correctCachedOnMoveBetweenTrees($key,$levelDelta,$target->{$this->rootAttribute});
 			}
-
-			$condition=$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.$db->quoteColumnName($this->rightAttribute).'<='.$right;
-
-			if($this->hasManyRoots)
+			else
 			{
-				$rootCondition=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute};
-				$condition.=$rootCondition;
-			}
+				$delta=$right-$left+1;
+				$this->shiftLeftRight($key,$delta);
 
-			$owner->updateAll(array($this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDiff))),$condition);
+				if($left>=$key)
+				{
+					$left+=$delta;
+					$right+=$delta;
+				}
 
-			foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
-			{
-				$condition=$db->quoteColumnName($attribute).'>='.$left.' AND '.$db->quoteColumnName($attribute).'<='.$right;
+				$condition=$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.$db->quoteColumnName($this->rightAttribute).'<='.$right;
 
 				if($this->hasManyRoots)
+				{
+					$rootCondition=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute};
 					$condition.=$rootCondition;
+				}
 
-				$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$key-$left))),$condition);
+				$owner->updateAll(array($this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDelta))),$condition);
+
+				foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
+				{
+					$condition=$db->quoteColumnName($attribute).'>='.$left.' AND '.$db->quoteColumnName($attribute).'<='.$right;
+
+					if($this->hasManyRoots)
+						$condition.=$rootCondition;
+
+					$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$key-$left))),$condition);
+				}
+
+				$this->shiftLeftRight($right+1,-$delta);
+
+				if($extTransFlag===null)
+					$transaction->commit();
+
+				$this->correctCachedOnMoveNode($key,$levelDelta);
 			}
-
-			$this->shiftLeftRight($right+1,-$delta);
-
-			if($extTransFlag===null)
-				$transaction->commit();
-
-			$this->correctCachedOnMoveNode($key,$levelDiff);
-
-			return true;
 		}
 		catch(Exception $e)
 		{
 			if($extTransFlag===null)
 				$transaction->rollBack();
 
-			return false;
+			throw $e;
+		}
+
+		return true;
+	}
+
+	private function correctCachedOnDelete()
+	{
+		$owner=$this->getOwner();
+		$left=$owner->{$this->leftAttribute};
+		$right=$owner->{$this->rightAttribute};
+		$key=$right+1;
+		$delta=$left-$right-1;
+
+		foreach(self::$_cached[get_class($owner)] as $node)
+		{
+			if($node->getIsNewRecord() || $node->getIsDeletedRecord())
+				continue;
+
+			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$node->{$this->rootAttribute})
+				continue;
+
+			if($node->{$this->leftAttribute}>=$left && $node->{$this->rightAttribute}<=$right)
+				$node->setIsDeletedRecord(true);
+			else
+			{
+				if($node->{$this->leftAttribute}>=$key)
+					$node->{$this->leftAttribute}+=$delta;
+
+				if($node->{$this->rightAttribute}>=$key)
+					$node->{$this->rightAttribute}+=$delta;
+			}
 		}
 	}
 
-	protected function correctCachedOnMoveNode($key,$levelDiff)
+	private function correctCachedOnAddNode($key)
+	{
+		$owner=$this->getOwner();
+
+		foreach(self::$_cached[get_class($owner)] as $node)
+		{
+			if($node->getIsNewRecord() || $node->getIsDeletedRecord())
+				continue;
+
+			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$node->{$this->rootAttribute})
+				continue;
+
+			if($node->{$this->leftAttribute}>=$key)
+				$node->{$this->leftAttribute}+=2;
+
+			if($node->{$this->rightAttribute}>=$key)
+				$node->{$this->rightAttribute}+=2;
+		}
+	}
+
+	private function correctCachedOnMoveNode($key,$levelDelta)
 	{
 		$owner=$this->getOwner();
 		$left=$owner->{$this->leftAttribute};
@@ -817,6 +719,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			$left+=$delta;
 			$right+=$delta;
 		}
+
+		$delta2=$key-$left;
 
 		foreach(self::$_cached[get_class($owner)] as $node)
 		{
@@ -833,13 +737,13 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 				$node->{$this->rightAttribute}+=$delta;
 
 			if($node->{$this->leftAttribute}>=$left && $node->{$this->rightAttribute}<=$right)
-				$node->{$this->levelAttribute}+=$levelDiff;
+				$node->{$this->levelAttribute}+=$levelDelta;
 
 			if($node->{$this->leftAttribute}>=$left && $node->{$this->leftAttribute}<=$right)
-				$node->{$this->leftAttribute}+=$key-$left;
+				$node->{$this->leftAttribute}+=$delta2;
 
 			if($node->{$this->rightAttribute}>=$left && $node->{$this->rightAttribute}<=$right)
-				$node->{$this->rightAttribute}+=$key-$left;
+				$node->{$this->rightAttribute}+=$delta2;
 
 			if($node->{$this->leftAttribute}>=$right+1)
 				$node->{$this->leftAttribute}-=$delta;
@@ -849,92 +753,44 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
-	protected function moveBetweenTrees($key,$newRoot,$levelDiff)
+	private function correctCachedOnMoveBetweenTrees($key,$levelDelta,$root)
 	{
 		$owner=$this->getOwner();
-		$db=$owner->getDbConnection();
-		$extTransFlag=$db->getCurrentTransaction();
-
-		if($extTransFlag===null)
-			$transaction=$db->beginTransaction();
-
-		try
-		{
-			$oldLeft=$owner->{$this->leftAttribute};
-			$oldRight=$owner->{$this->rightAttribute};
-
-			foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
-			{
-				$condition=$db->quoteColumnName($attribute).'>='.$key.' AND '.$db->quoteColumnName($this->rootAttribute).'='.$newRoot;
-				$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$oldRight-$oldLeft+1))),$condition);
-			}
-
-			$diff=$key-$oldLeft;
-			$owner->updateAll(
-				array(
-					$this->leftAttribute=>new CDbExpression($db->quoteColumnName($this->leftAttribute).sprintf('%+d',$diff)),
-					$this->rightAttribute=>new CDbExpression($db->quoteColumnName($this->rightAttribute).sprintf('%+d',$diff)),
-					$this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDiff)),
-					$this->rootAttribute=>$newRoot,
-				),
-				$db->quoteColumnName($this->leftAttribute).'>='.$oldLeft.' AND '.
-				$db->quoteColumnName($this->rightAttribute).'<='.$oldRight.' AND '.
-				$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute}
-			);
-
-			$this->shiftLeftRight($oldRight+1,$oldLeft-$oldRight-1);
-
-			if($extTransFlag===null)
-				$transaction->commit();
-
-			$this->correctCachedOnMoveBetweenTrees($key,$newRoot,$levelDiff);
-
-			return true;
-		}
-		catch(Exception $e)
-		{
-			if($extTransFlag===null)
-				$transaction->rollBack();
-
-			return false;
-		}
-	}
-
-	protected function correctCachedOnMoveBetweenTrees($key,$newRoot,$levelDiff)
-	{
-		$owner=$this->getOwner();
-		$oldLeft=$owner->{$this->leftAttribute};
-		$oldRight=$owner->{$this->rightAttribute};
+		$left=$owner->{$this->leftAttribute};
+		$right=$owner->{$this->rightAttribute};
+		$delta=$right-$left+1;
+		$delta2=$key-$left;
+		$delta3=$left-$right-1;
 
 		foreach(self::$_cached[get_class($owner)] as $node)
 		{
 			if($node->getIsNewRecord() || $node->getIsDeletedRecord())
 				continue;
 
-			if($node->{$this->rootAttribute}===$newRoot)
+			if($node->{$this->rootAttribute}===$root)
 			{
 				if($node->{$this->leftAttribute}>=$key)
-					$node->{$this->leftAttribute}+=$oldRight-$oldLeft+1;
+					$node->{$this->leftAttribute}+=$delta;
 
 				if($node->{$this->rightAttribute}>=$key)
-					$node->{$this->rightAttribute}+=$oldRight-$oldLeft+1;
+					$node->{$this->rightAttribute}+=$delta;
 			}
 			else if($node->{$this->rootAttribute}===$owner->{$this->rootAttribute})
 			{
-				if($node->{$this->leftAttribute}>=$oldLeft && $node->{$this->rightAttribute}<=$oldRight)
+				if($node->{$this->leftAttribute}>=$left && $node->{$this->rightAttribute}<=$right)
 				{
-					$node->{$this->leftAttribute}+=$key-$oldLeft;
-					$node->{$this->rightAttribute}+=$key-$oldLeft;
-					$node->{$this->levelAttribute}+=$levelDiff;
-					$node->{$this->rootAttribute}=$newRoot;
+					$node->{$this->leftAttribute}+=$delta2;
+					$node->{$this->rightAttribute}+=$delta2;
+					$node->{$this->levelAttribute}+=$levelDelta;
+					$node->{$this->rootAttribute}=$root;
 				}
 				else
 				{
-					if($node->{$this->leftAttribute}>=$oldRight+1)
-						$node->{$this->leftAttribute}+=$oldLeft-$oldRight-1;
+					if($node->{$this->leftAttribute}>=$right+1)
+						$node->{$this->leftAttribute}+=$delta3;
 
-					if($node->{$this->rightAttribute}>=$oldRight+1)
-						$node->{$this->rightAttribute}+=$oldLeft-$oldRight-1;
+					if($node->{$this->rightAttribute}>=$right+1)
+						$node->{$this->rightAttribute}+=$delta3;
 				}
 			}
 		}
