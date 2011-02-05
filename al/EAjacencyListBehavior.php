@@ -23,8 +23,10 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 	 * @param int depth
 	 * @return CActiveRecord the owner
 	 */
-	public function descendants($depth)
+	public function descendants($depth=null)
 	{
+		//check hasLevel if $depth===null
+
 		$owner=$this->getOwner();
 
 		if($depth>1)
@@ -44,7 +46,7 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 		return $this->descendants(1);
 	}
 
-	public function ancestors($depth)
+	public function ancestors($depth=null)
 	{
 	}
 

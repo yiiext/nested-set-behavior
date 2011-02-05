@@ -8,5 +8,5 @@ CREATE TABLE `category` (
   KEY `root` (`root`)
   KEY `lft` (`lft`),
   KEY `rgt` (`rgt`),
-  KEY `level` (`level`),
-)
+  KEY `level` (`level`)
+);

@@ -6,5 +6,5 @@ CREATE TABLE `category` (
   PRIMARY KEY (`id`),
   KEY `lft` (`lft`),
   KEY `rgt` (`rgt`),
-  KEY `level` (`level`),
-)
+  KEY `level` (`level`)
+);
