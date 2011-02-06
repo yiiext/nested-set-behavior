@@ -1,11 +1,11 @@
 <?php
 /**
- * AjacencyListBehavior
+ * AdjacencyListBehavior
  *
  * @version 0.01 (skeleton)
  * @author creocoder <creocoder@gmail.com>
  */
-class EAjacencyListBehavior extends CActiveRecordBehavior
+class EAdjacencyListBehavior extends CActiveRecordBehavior
 {
 	public $hasLevel=false;
 	public $hasWeight=false;
@@ -28,11 +28,29 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 		//check hasLevel if $depth===null
 
 		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
+		$criteria=$owner->getDbCriteria();
+		$alias=$db->quoteColumnName($owner->getTableAlias());
 
 		if($depth>1)
 		{
-			// add virtual relations
+			$with=array('children');
+
+			for($i=1;$i<$depth-1;$i++)
+			{
+				$with=array(
+					'children'=>array(
+						'with'=>$with,
+						'alias'=>"children$i",
+					),
+				);
+			}
+
+			$owner->getMetaData()->addRelation('children',array(CActiveRecord::HAS_MANY,get_class($owner),$this->parentAttribute));
+			$criteria->mergeWith(array('with'=>$with));
 		}
+
+		$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->parentAttribute).'='.$owner->primaryKey);
 
 		return $owner;
 	}
@@ -48,6 +66,19 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 
 	public function ancestors($depth=null)
 	{
+	}
+
+	/**
+	 * Gets root node.
+	 * @return CActiveRecord the record found. Null if no record is found
+	 */
+	public function getRoot()
+	{
+		$owner=$this->getOwner();
+		$db=$owner->getDbConnection();
+		$owner->getDbCriteria()->addCondition($db->quoteColumnName($owner->getTableAlias()).'.'.$db->quoteColumnName($this->parentAttribute).' IS NULL');
+
+		return $owner->find();
 	}
 
 	/**
@@ -139,6 +170,7 @@ class EAjacencyListBehavior extends CActiveRecordBehavior
 	 */
 	public function moveAsLast($target)
 	{
+		// check hasWeight
 	}
 
 	/**
