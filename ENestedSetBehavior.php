@@ -730,7 +730,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$node->{$this->rootAttribute})
 				continue;
 
-			if($node->{$this->leftAttribute}>=$key && $node->{$this->rightAttribute}>=$key)
+			if($node->{$this->leftAttribute}>=$key)
 				$node->{$this->leftAttribute}+=$delta;
 
 			if($node->{$this->rightAttribute}>=$key)
