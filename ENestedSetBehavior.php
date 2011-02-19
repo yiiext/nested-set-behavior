@@ -2,7 +2,7 @@
 /**
  * ENestedSetBehavior class file.
  *
- * @author Alexander Kochetov <creocoder@google.com>
+ * @author Alexander Kochetov <creocoder@gmail.com>
  * @link http://code.google.com/p/yiiext/
  */
 
