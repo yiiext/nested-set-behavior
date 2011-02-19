@@ -1,11 +1,18 @@
 <?php
 /**
- * NestedSetBehavior
+ * ENestedSetBehavior class file.
  *
- * @version 1.00
- * @author creocoder <creocoder@gmail.com>
+ * @author Alexander Kochetov <creocoder@google.com>
+ * @link http://code.google.com/p/yiiext/
  */
-class ENestedSetBehavior extends CActiveRecordBehavior
+
+/**
+ * Provides nested set functionality for a model.
+ *
+ * @version 1.0
+ * @package yiiext.behaviors.model.trees
+ */
+final class ENestedSetBehavior extends CActiveRecordBehavior
 {
 	public $hasManyRoots=false;
 	public $rootAttribute='root';
@@ -20,8 +27,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets descendants for node.
-	 * @param int depth
-	 * @return CActiveRecord the owner
+	 * @param int $depth the depth.
+	 * @return CActiveRecord the owner.
 	 */
 	public function descendants($depth=null)
 	{
@@ -47,7 +54,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets children for node (direct descendants only).
-	 * @return CActiveRecord the owner
+	 * @return CActiveRecord the owner.
 	 */
 	public function children()
 	{
@@ -56,8 +63,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets ancestors for node.
-	 * @param int depth.
-	 * @return CActiveRecord the owner
+	 * @param int $depth the depth.
+	 * @return CActiveRecord the owner.
 	 */
 	public function ancestors($depth=null)
 	{
@@ -83,8 +90,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets root node(s).
-	 * @param int depth
-	 * @return CActiveRecord the owner
+	 * @return CActiveRecord the owner.
 	 */
 	public function roots()
 	{
@@ -97,7 +103,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Gets record of node parent.
-	 * @return CActiveRecord the record found. Null if no record is found
+	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
 	public function getParent()
 	{
@@ -120,7 +126,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Gets record of previous sibling.
-	 * @return CActiveRecord the record found. Null if no record is found
+	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
 	public function getPrevSibling()
 	{
@@ -138,7 +144,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Gets record of next sibling.
-	 * @return CActiveRecord the record found. Null if no record is found
+	 * @return CActiveRecord the record found. Null if no record is found.
 	 */
 	public function getNextSibling()
 	{
@@ -156,7 +162,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Create root node if multiple-root tree mode. Update node if it's not new.
-	 * @return boolean whether the saving succeeds
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param boolean $attributes list of attributes.
+	 * @return boolean whether the saving succeeds.
 	 */
 	public function save($runValidation=true,$attributes=null)
 	{
@@ -175,6 +183,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return $result;
 	}
 
+	/**
+	 * Create root node if multiple-root tree mode. Update node if it's not new.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param boolean $attributes list of attributes.
+	 * @return boolean whether the saving succeeds.
+	 */
 	public function saveNode($runValidation=true,$attributes=null)
 	{
 		return $this->save($runValidation,$attributes);
@@ -182,7 +196,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Deletes node and it's descendants.
-	 * @return boolean whether the deletion is successful
+	 * @return boolean whether the deletion is successful.
 	 */
 	public function delete()
 	{
@@ -237,6 +251,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return true;
 	}
 
+	/**
+	 * Deletes node and it's descendants.
+	 * @return boolean whether the deletion is successful.
+	 */
 	public function deleteNode()
 	{
 		return $this->delete();
@@ -244,7 +262,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Prepends node to target as first child.
-	 * @return boolean whether the prepending succeeds
+	 * @param CActiveRecord $target the target.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param array $attributes list of attributes.
+	 * @return boolean whether the prepending succeeds.
 	 */
 	public function prependTo($target,$runValidation=true,$attributes=null)
 	{
@@ -253,7 +274,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Prepends target to node as first child.
-	 * @return boolean whether the prepending succeeds
+	 * @param CActiveRecord $target the target.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param array $attributes list of attributes.
+	 * @return boolean whether the prepending succeeds.
 	 */
 	public function prepend($target,$runValidation=true,$attributes=null)
 	{
@@ -262,7 +286,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Appends node to target as last child.
-	 * @return boolean whether the appending succeeds
+	 * @param CActiveRecord $target the target.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param array $attributes list of attributes.
+	 * @return boolean whether the appending succeeds.
 	 */
 	public function appendTo($target,$runValidation=true,$attributes=null)
 	{
@@ -271,7 +298,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Appends target to node as last child.
-	 * @return boolean whether the appending succeeds
+	 * @param CActiveRecord $target the target.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param array $attributes list of attributes.
+	 * @return boolean whether the appending succeeds.
 	 */
 	public function append($target,$runValidation=true,$attributes=null)
 	{
@@ -280,7 +310,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Inserts node as previous sibling of target.
-	 * @return boolean whether the inserting succeeds
+	 * @param CActiveRecord $target the target.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param array $attributes list of attributes.
+	 * @return boolean whether the inserting succeeds.
 	 */
 	public function insertBefore($target,$runValidation=true,$attributes=null)
 	{
@@ -289,7 +322,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Inserts node as next sibling of target.
-	 * @return boolean whether the inserting succeeds
+	 * @param CActiveRecord $target the target.
+	 * @param boolean $runValidation whether to perform validation.
+	 * @param array $attributes list of attributes.
+	 * @return boolean whether the inserting succeeds.
 	 */
 	public function insertAfter($target,$runValidation=true,$attributes=null)
 	{
@@ -298,7 +334,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Move node as previous sibling of target.
-	 * @return boolean whether the moving succeeds
+	 * @param CActiveRecord $target the target.
+	 * @return boolean whether the moving succeeds.
 	 */
 	public function moveBefore($target)
 	{
@@ -307,7 +344,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Move node as next sibling of target.
-	 * @return boolean whether the moving succeeds
+	 * @param CActiveRecord $target the target.
+	 * @return boolean whether the moving succeeds.
 	 */
 	public function moveAfter($target)
 	{
@@ -316,7 +354,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Move node as first child of target.
-	 * @return boolean whether the moving succeeds
+	 * @param CActiveRecord $target the target.
+	 * @return boolean whether the moving succeeds.
 	 */
 	public function moveAsFirst($target)
 	{
@@ -325,7 +364,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Move node as last child of target.
-	 * @return boolean whether the moving succeeds
+	 * @param CActiveRecord $target the target.
+	 * @return boolean whether the moving succeeds.
 	 */
 	public function moveAsLast($target)
 	{
@@ -334,7 +374,8 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Determines if node is descendant of subject node.
-	 * @return boolean
+	 * @param CActiveRecord $subj the subject node.
+	 * @return boolean whether the node is descendant of subject node.
 	 */
 	public function isDescendantOf($subj)
 	{
@@ -350,7 +391,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Determines if node is leaf.
-	 * @return boolean
+	 * @return boolean whether the node is leaf.
 	 */
 	public function isLeaf()
 	{
@@ -361,35 +402,55 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Determines if node is root.
-	 * @return boolean
+	 * @return boolean whether the node is root.
 	 */
 	public function isRoot()
 	{
 		return $this->getOwner()->{$this->leftAttribute}==1;
 	}
 
+	/**
+	 * Returns if the current node is deleted.
+	 * @return boolean whether the node is deleted.
+	 */
 	public function getIsDeletedRecord()
 	{
 		return $this->_deleted;
 	}
 
+	/**
+	 * Sets if the current node is deleted.
+	 * @param boolean $value whether the node is deleted.
+	 */
 	public function setIsDeletedRecord($value)
 	{
 		$this->_deleted=$value;
 	}
 
+	/**
+	 * Handle 'afterConstruct' event of the owner.
+	 * @param CEvent $event event parameter.
+	 */
 	public function afterConstruct($event)
 	{
 		$owner=$this->getOwner();
 		self::$_cached[get_class($owner)][$this->_id=self::$_c++]=$owner;
 	}
 
+	/**
+	 * Handle 'afterFind' event of the owner.
+	 * @param CEvent $event event parameter.
+	 */
 	public function afterFind($event)
 	{
 		$owner=$this->getOwner();
 		self::$_cached[get_class($owner)][$this->_id=self::$_c++]=$owner;
 	}
 
+	/**
+	 * Handle 'beforeSave' event of the owner.
+	 * @param CEvent $event event parameter.
+	 */
 	public function beforeSave($event)
 	{
 		if($this->_ignoreEvent)
@@ -398,6 +459,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::save() method when ENestedSetBehavior attached.'));
 	}
 
+	/**
+	 * Handle 'beforeDelete' event of the owner.
+	 * @param CEvent $event event parameter.
+	 */
 	public function beforeDelete($event)
 	{
 		if($this->_ignoreEvent)
@@ -406,7 +471,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::delete() method when ENestedSetBehavior attached.'));
 	}
 
-	protected function shiftLeftRight($key,$delta)
+	/**
+	 * @param int $key.
+	 * @param int $delta.
+	 */
+	private function shiftLeftRight($key,$delta)
 	{
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
@@ -422,7 +491,14 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
-	protected function addNode($target,$key,$levelUp,$runValidation,$attributes)
+	/**
+	 * @param CActiveRecord $target.
+	 * @param int $key.
+	 * @param int $levelUp.
+	 * @param boolean $runValidation.
+	 * @param array $attributes.
+	 */
+	private function addNode($target,$key,$levelUp,$runValidation,$attributes)
 	{
 		$owner=$this->getOwner();
 
@@ -487,7 +563,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return true;
 	}
 
-	protected function makeRoot($attributes)
+	/**
+	 * @param array $attributes.
+	 */
+	private function makeRoot($attributes)
 	{
 		$owner=$this->getOwner();
 		$owner->{$this->leftAttribute}=1;
@@ -546,7 +625,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return true;
 	}
 
-	protected function moveNode($target,$key,$levelUp)
+	/**
+	 * @param CActiveRecord $target.
+	 * @param int $key.
+	 * @param int $levelUp.
+	 */
+	private function moveNode($target,$key,$levelUp)
 	{
 		$owner=$this->getOwner();
 
@@ -658,6 +742,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		return true;
 	}
 
+	/**
+	 * Correct cache for {@link ENestedSetBehavior::delete()} and {@link ENestedSetBehavior::deleteNode()}.
+	 */
 	private function correctCachedOnDelete()
 	{
 		$owner=$this->getOwner();
@@ -687,6 +774,10 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
+	/**
+	 * Correct cache for {@link ENestedSetBehavior::addNode()}.
+	 * @param int $key.
+	 */
 	private function correctCachedOnAddNode($key)
 	{
 		$owner=$this->getOwner();
@@ -707,6 +798,11 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
+	/**
+	 * Correct cache for {@link ENestedSetBehavior::moveNode()}.
+	 * @param int $key.
+	 * @param int $levelDelta.
+	 */
 	private function correctCachedOnMoveNode($key,$levelDelta)
 	{
 		$owner=$this->getOwner();
@@ -753,6 +849,12 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
+	/**
+	 * Correct cache for {@link ENestedSetBehavior::moveNode()}.
+	 * @param int $key.
+	 * @param int $levelDelta.
+	 * @param int $root.
+	 */
 	private function correctCachedOnMoveBetweenTrees($key,$levelDelta,$root)
 	{
 		$owner=$this->getOwner();
@@ -796,6 +898,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		}
 	}
 
+	/**
+	 * Destructor.
+	 */
 	public function __destruct()
 	{
 		unset(self::$_cached[get_class($this->getOwner())][$this->_id]);
