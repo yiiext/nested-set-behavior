@@ -1,3 +1,8 @@
+1.01
+----
+- Added not integer pk support
+- Remove `final` from class
+
 1.00
 ----
 - Some behavior refactoring before release (creocoder)

@@ -1,1 +1,1 @@
-- Add not integer pk support for NS and AL
+- Add not integer pk support for AL

@@ -9,10 +9,10 @@
 /**
  * Provides nested set functionality for a model.
  *
- * @version 1.0
+ * @version 1.01
  * @package yiiext.behaviors.model.trees
  */
-final class ENestedSetBehavior extends CActiveRecordBehavior
+class ENestedSetBehavior extends CActiveRecordBehavior
 {
 	public $hasManyRoots=false;
 	public $rootAttribute='root';
@@ -47,7 +47,10 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->levelAttribute).'<='.($owner->{$this->levelAttribute}+$depth));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
+		{
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount);
+			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+		}
 
 		return $owner;
 	}
@@ -83,7 +86,10 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->levelAttribute).'>='.($owner->{$this->levelAttribute}+$depth));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
+		{
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount);
+			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+		}
 
 		return $owner;
 	}
@@ -119,7 +125,10 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 		));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
+		{
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount);
+			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+		}
 
 		return $owner->find();
 	}
@@ -137,7 +146,10 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 		$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rightAttribute).'='.($owner->{$this->leftAttribute}-1));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
+		{
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount);
+			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+		}
 
 		return $owner->find();
 	}
@@ -155,7 +167,10 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 		$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->leftAttribute).'='.($owner->{$this->rightAttribute}+1));
 
 		if($this->hasManyRoots)
-			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute});
+		{
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount);
+			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+		}
 
 		return $owner->find();
 	}
@@ -224,10 +239,15 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 				$condition=$db->quoteColumnName($this->leftAttribute).'>='.$owner->{$this->leftAttribute}.' AND '.
 					$db->quoteColumnName($this->rightAttribute).'<='.$owner->{$this->rightAttribute};
 
-				if($this->hasManyRoots)
-					$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute};
+				$params=array();
 
-				$result=$owner->deleteAll($condition)>0;
+				if($this->hasManyRoots)
+				{
+					$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount;
+					$params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+				}
+
+				$result=$owner->deleteAll($condition,$params)>0;
 			}
 
 			if(!$result)
@@ -483,11 +503,15 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 		foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
 		{
 			$condition=$db->quoteColumnName($attribute).'>='.$key;
+			$params=array();
 
 			if($this->hasManyRoots)
-				$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute};
+			{
+				$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount;
+				$params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+			}
 
-			$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$delta))),$condition);
+			$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$delta))),$condition,$params);
 		}
 	}
 
@@ -668,11 +692,13 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 			{
 				foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
 				{
-					$condition=$db->quoteColumnName($attribute).'>='.$key.' AND '.$db->quoteColumnName($this->rootAttribute).'='.$target->{$this->rootAttribute};
-					$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$right-$left+1))),$condition);
+					$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$right-$left+1))),
+						$db->quoteColumnName($attribute).'>='.$key.' AND '.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount,
+						array(CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++=>$target->{$this->rootAttribute}));
 				}
 
 				$delta=$key-$left;
+
 				$owner->updateAll(
 					array(
 						$this->leftAttribute=>new CDbExpression($db->quoteColumnName($this->leftAttribute).sprintf('%+d',$delta)),
@@ -682,8 +708,8 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 					),
 					$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.
 					$db->quoteColumnName($this->rightAttribute).'<='.$right.' AND '.
-					$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute}
-				);
+					$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount,
+					array(CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++=>$owner->{$this->rootAttribute}));
 
 				$this->shiftLeftRight($right+1,$left-$right-1);
 
@@ -704,23 +730,28 @@ final class ENestedSetBehavior extends CActiveRecordBehavior
 				}
 
 				$condition=$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.$db->quoteColumnName($this->rightAttribute).'<='.$right;
+				$params=array();
 
 				if($this->hasManyRoots)
 				{
-					$rootCondition=' AND '.$db->quoteColumnName($this->rootAttribute).'='.$owner->{$this->rootAttribute};
-					$condition.=$rootCondition;
+					$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount;
+					$params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
 				}
 
-				$owner->updateAll(array($this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDelta))),$condition);
+				$owner->updateAll(array($this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDelta))),$condition,$params);
 
 				foreach(array($this->leftAttribute,$this->rightAttribute) as $attribute)
 				{
 					$condition=$db->quoteColumnName($attribute).'>='.$left.' AND '.$db->quoteColumnName($attribute).'<='.$right;
+					$params=array();
 
 					if($this->hasManyRoots)
-						$condition.=$rootCondition;
+					{
+						$condition.=' AND '.$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount;
+						$params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
+					}
 
-					$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$key-$left))),$condition);
+					$owner->updateAll(array($attribute=>new CDbExpression($db->quoteColumnName($attribute).sprintf('%+d',$key-$left))),$condition,$params);
 				}
 
 				$this->shiftLeftRight($right+1,-$delta);
