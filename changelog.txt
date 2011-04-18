@@ -1,7 +1,11 @@
+1.02
+----
+- Added moveAsRoot() method (creocoder)
+
 1.01
 ----
-- Added not integer pk support
-- Remove `final` from class
+- Added not integer pk support (creocoder)
+- Remove `final` from class (creocoder)
 
 1.00
 ----

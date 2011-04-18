@@ -83,3 +83,4 @@ API
 - prependTo($target) prepend node to the $target
 - moveBefore($target), moveAfter($target) move node to before/after $target
 - moveAsFirst($target), moveAsLast($target) move node to the beginning/end of $target
+- moveAsRoot() move node as new root

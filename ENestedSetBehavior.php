@@ -9,7 +9,7 @@
 /**
  * Provides nested set functionality for a model.
  *
- * @version 1.01
+ * @version 1.02
  * @package yiiext.behaviors.model.trees
  */
 class ENestedSetBehavior extends CActiveRecordBehavior
@@ -390,6 +390,69 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	public function moveAsLast($target)
 	{
 		return $this->moveNode($target,$target->{$this->rightAttribute},1);
+	}
+
+	/**
+	 * Move node as new root.
+	 * @return boolean whether the moving succeeds.
+	 */
+	public function moveAsRoot()
+	{
+		$owner=$this->getOwner();
+
+		if(!$this->hasManyRoots)
+			throw new CException(Yii::t('yiiext','Many roots mode is off.'));
+
+		if($owner->getIsNewRecord())
+			throw new CException(Yii::t('yiiext','The node should not be new record.'));
+
+		if($this->getIsDeletedRecord())
+			throw new CDbException(Yii::t('yiiext','The node should not be deleted.'));
+
+		if($owner->isRoot())
+			throw new CException(Yii::t('yiiext','The node already is root node.'));
+
+		$db=$owner->getDbConnection();
+		$extTransFlag=$db->getCurrentTransaction();
+
+		if($extTransFlag===null)
+			$transaction=$db->beginTransaction();
+
+		try
+		{
+			$left=$owner->{$this->leftAttribute};
+			$right=$owner->{$this->rightAttribute};
+			$levelDelta=1-$owner->{$this->levelAttribute};
+			$delta=1-$left;
+
+			$owner->updateAll(
+				array(
+					$this->leftAttribute=>new CDbExpression($db->quoteColumnName($this->leftAttribute).sprintf('%+d',$delta)),
+					$this->rightAttribute=>new CDbExpression($db->quoteColumnName($this->rightAttribute).sprintf('%+d',$delta)),
+					$this->levelAttribute=>new CDbExpression($db->quoteColumnName($this->levelAttribute).sprintf('%+d',$levelDelta)),
+					$this->rootAttribute=>$owner->getPrimaryKey(),
+				),
+				$db->quoteColumnName($this->leftAttribute).'>='.$left.' AND '.
+				$db->quoteColumnName($this->rightAttribute).'<='.$right.' AND '.
+				$db->quoteColumnName($this->rootAttribute).'='.CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount,
+				array(CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++=>$owner->{$this->rootAttribute}));
+
+			$this->shiftLeftRight($right+1,$left-$right-1);
+
+			if($extTransFlag===null)
+				$transaction->commit();
+
+			$this->correctCachedOnMoveBetweenTrees(1,$levelDelta,$owner->getPrimaryKey());
+		}
+		catch(Exception $e)
+		{
+			if($extTransFlag===null)
+				$transaction->rollBack();
+
+			throw $e;
+		}
+		
+		return true;
 	}
 
 	/**
