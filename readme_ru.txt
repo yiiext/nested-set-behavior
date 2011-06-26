@@ -1,38 +1,57 @@
 Nested Set
 ==========
 
-Этот компонент предназначен для работы с деревьями, которые хранятся в виде вложенных множеств. Реализация компонента выполнена в виде поведения для Active Record моделей. Для начала работы необходимо сконфигурировать модель следующим образом:
+Этот компонент предназначен для работы с деревьями, которые хранятся в виде
+вложенных множеств. Реализация компонента выполнена в виде поведения для
+Active Record моделей.
 
 Установка и настройка
 ---------------------
+
+Для начала работы необходимо сконфигурировать модель следующим образом:
 
 ~~~
 [php]
 public function behaviors()
 {
     return array(
-        ‘ENestedSetBehavior’=>array(
-            ‘class’=>’ext.yiiext.behaviors.trees.ENestedSetBehavior’,
-            ‘leftAttribute’=>’lft’,
-            ‘rightAttribute’=>’rgt’,
-            ‘levelAttribute’=>’level’,
+        'ENestedSetBehavior'=>array(
+            'class'=>'ext.yiiext.behaviors.trees.ENestedSetBehavior',
+            'leftAttribute'=>'lft',
+            'rightAttribute'=>'rgt',
+            'levelAttribute'=>'level',
     );
 }
 ~~~
 
-Необходимости в валидации полей, которые определяются опциями ‘leftAttribute’, ‘rightAttribute’, ‘rootAttribute’ и ‘levelAttribute’ нет. Поэтому проверьте её отсутствие для этих полей в методе rules() модели. В противном случае могут возникнуть проблемы с некоторыми методами поведения.
+Необходимости в валидации полей, которые определяются опциями `leftAttribute`,
+`rightAttribute`, `rootAttribute` и `levelAttribute` нет. Кроме того, могут
+возникнуть проблемы с некоторыми методами поведения, если для данных полей
+имеются правила валидации. Проверьте их отсутствие в методе rules() модели.
 
-Структура базы данных может быть аналогична “extensions/yiiext/behaviors/trees/schema.sql” в случае если в таблице планируется хранение только одного дерева. Если в таблице необходимо хранить множество деревьев, то подойдет схема “extensions/yiiext/behaviors/trees/schema_many_roots.sql”.
+Структура базы данных может быть аналогична
+`extensions/yiiext/behaviors/trees/schema.sql` в случае если в таблице планируется
+хранение только одного дерева. Если в таблице необходимо хранить множество деревьев,
+то подойдет схема `extensions/yiiext/behaviors/trees/schema_many_roots.sql`.
 
-Значения опций ‘leftAttribute’, ‘rightAttribute’ и ‘levelAttribute’ по умолчанию совпадают с названием полей в вышеприведенных схемах, поэтому при конфигурации поведения их можно опустить.
+Значения опций `leftAttribute`, `rightAttribute` и `levelAttribute` по умолчанию
+совпадают с названием полей в вышеприведенных схемах, поэтому при конфигурации
+поведения их можно опустить.
 
-У поведения существует два режима работы: одно дерево и много деревьев. Режим работы управляется опцией ‘hasManyRoots’, которая по умолчанию имеет значение false. В режиме работы “много деревьев” возможно использование ещё одной опции ‘rootAttribute’, значение которой по умолчанию также совпадает с названием поля в соответствующей схеме.
+У поведения существует два режима работы: одно дерево и много деревьев.
+Режим работы управляется опцией `hasManyRoots`, которая по умолчанию имеет
+значение `false`. В режиме работы «много деревьев» возможно использование
+ещё одной опции `rootAttribute`, значение которой по умолчанию также совпадает
+с названием поля в соответствующей схеме.
 
 Описание работы методов выборки
 -------------------------------
 
-В дальнейшем все особенности работы методов будут рассмотрены в контексте конкретного дерева. Допустим у нас есть модель Category, а в базе данных хранится следующая структура:
+В дальнейшем все особенности работы методов будут рассмотрены в контексте
+конкретного дерева. Допустим у нас есть модель `Category`, а в базе данных
+хранится следующая структура:
 
+~~~
 - 1. Mobile phones
 	- 2. iPhone
 	- 3. Samsung
@@ -43,14 +62,14 @@ public function behaviors()
 	- 8. Audi
 	- 9. Ford
 	- 10. Mercedes
+~~~
 
-В этом примере в таблице хранится два дерева, корнями которых являются соответственно узлы с ID=1 и ID=7.
+В этом примере в таблице хранится два дерева, корнями которых являются
+соответственно узлы с ID=1 и ID=7.
 
-###Выборка всех корней
+### Выборка всех корней
 
-Используем метод ENestedSetBehavior::roots().
-
-Использование:
+Используем метод `ENestedSetBehavior::roots()`:
 ~~~
 [php]
 $roots=Category::model()->roots()->findAll();
@@ -58,13 +77,12 @@ $roots=Category::model()->roots()->findAll();
 
 Результат:
 
-Массив объектов Active Record, которые характеризуют узлы Mobile phones и Cars
+Массив объектов Active Record, которые характеризуют узлы Mobile phones и Cars.
 
 ### Выборка всех потомков узла
 
-Используем метод ENestedSetBehavior::descendants().
+Используем метод `ENestedSetBehavior::descendants()`:
 
-Использование:
 ~~~
 [php]
 $category=Category::model()->findByPk(1);
@@ -77,9 +95,8 @@ $descendants=$category->descendants()->findAll();
 
 ### Выборка прямых потомков узла
 
-Используем метод ENestedSetBehavior::children().
+Используем метод `ENestedSetBehavior::children()`:
 
-Использование:
 ~~~
 [php]
 $category=Category::model()->findByPk(1);
@@ -92,9 +109,8 @@ $descendants=$category->children()->findAll();
 
 ### Выборка всех предков узла
 
-Используем метод ENestedSetBehavior::ancestors().
+Используем метод `ENestedSetBehavior::ancestors()`:
 
-Использование:
 ~~~
 [php]
 $category=Category::model()->findByPk(5);
@@ -107,9 +123,8 @@ $descendants=$category->ancestors()->findAll();
 
 ### Выборка предка узла
 
-Используем метод ENestedSetBehavior::getParent().
+Используем метод `ENestedSetBehavior::getParent()`:
 
-Использование:
 ~~~
 [php]
 $category=Category::model()->findByPk(9);
@@ -118,13 +133,13 @@ $parent=$category->parent;
 
 Результат:
 
-Объект Active Record, который характеризует узел Cars
+Объект Active Record, который характеризует узел Cars.
 
 ### Выборка соседей узла
 
-Используем методы ENestedSetBehavior::getPrevSibling() или ENestedSetBehavior::getNextSibling().
+Используем методы `ENestedSetBehavior::getPrevSibling()` или
+`ENestedSetBehavior::getNextSibling()`:
 
-Использование:
 ~~~
 [php]
 $category=Category::model()->findByPk(9);
@@ -139,13 +154,13 @@ $nextSibling=$category->nextSibling;
 
 Это может быть осуществлено при помощи стандартных методов Active Record.
 
-Для режима “одно дерево”:
+Для режима «одно дерево»:
 ~~~
 [php]
 Category::model()->findAll(array('order'=>'lft'));
 ~~~
 
-Для режима “много деревьев”:
+Для режима «много деревьев»:
 ~~~
 [php]
 Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array($root_id));
@@ -158,37 +173,41 @@ Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array(
 
 ### Создание корневых узлов
 
-Создание корня может быть осуществлено при помощи метода ENestedSetBehavior::saveNode(). В режиме работы “одно дерево” может быть создан только один корень, в противном случае вы получите CException.
+Создание корня может быть осуществлено при помощи метода ENestedSetBehavior::saveNode().
+В режиме работы «одно дерево» может быть создан только один корень, в противном
+случае вы получите CException.
 
-Использование:
 ~~~
 [php]
 $root=new Root;
-$root->title=’Mobile Phones’;
+$root->title='Mobile Phones';
 $root->saveNode();
 $root=new Root;
-$root->title=’Cars’;
+$root->title='Cars';
 $root->saveNode();
 ~~~
 
 Результат в виде дерева:
 
+~~~
 - 1. Mobile Phones
 - 2. Cars
+~~~
 
 ### Добавление дочерних узлов
 
-Для добавление дочерних узлов поведение содержит много методов, использование которых будет показано на примерах. Более подробно об этих методах можно прочитать в API.
+Для добавление дочерних узлов поведение содержит много методов, использование
+которых будет показано на примерах. Более подробно об этих методах можно прочитать в API.
 
 Продолжим работать с деревом, полученным в предыдущем разделе:
 ~~~
 [php]
 $category1=new Category;
-$category1->title=’Ford’;
+$category1->title='Ford';
 $category2=new Category;
-$category2->title=’Mercedes’;
+$category2->title='Mercedes';
 $category3=new Category;
-$category3->title=’Audi’;
+$category3->title='Audi';
 $root=Category::model()->findByPk(1);
 $category1->appendTo($root);
 $category2->insertAfter($category1);
@@ -197,11 +216,13 @@ $category3->insertBefore($category1);
 
 Результат в виде дерева:
 
+~~~
 - 1. Mobile phones
 	- 3. Audi
 	- 4. Ford
 	- 5. Mercedes
 - 2. Cars
+~~~
 
 Можно заметить, что это некорректно с точки зрения логики, но в следующих разделах мы это исправим.
 
@@ -209,11 +230,11 @@ $category3->insertBefore($category1);
 ~~~
 [php]
 $category1=new Category;
-$category1->title=’Samsung’;
+$category1->title='Samsung';
 $category2=new Category;
-$category2->title=’Motorola’;
+$category2->title='Motorola';
 $category3=new Category;
-$category3->title=’iPhone’;
+$category3->title='iPhone';
 $root=Category::model()->findByPk(2);
 $category1->appendTo($root);
 $category2->insertAfter($category1);
@@ -222,6 +243,7 @@ $category3->prependTo($root);
 
 Результат в виде дерева:
 
+~~~
 - 1. Mobile phones
 	- 3. Audi
 	- 4. Ford
@@ -230,6 +252,7 @@ $category3->prependTo($root);
 	- 6. iPhone
 	- 7. Samsung
 	- 8. Motorola
+~~~
 
 И снова, не обращаем внимание на нелогичность дерева.
 
@@ -237,9 +260,9 @@ $category3->prependTo($root);
 ~~~
 [php]
 $category1=new Category;
-$category1->title=’X100’;
+$category1->title='X100';
 $category2=new Category;
-$category2->title=’C200’;
+$category2->title='C200';
 $node=Category::model()->findByPk(3);
 $category1->appendTo($node);
 $category2->prependTo($node);
@@ -247,6 +270,7 @@ $category2->prependTo($node);
 
 Результат в виде дерева:
 
+~~~
 - 1. Mobile phones
 	- 3. Audi
 		- 9. С200
@@ -257,6 +281,7 @@ $category2->prependTo($node);
 	- 6. iPhone
 	- 7. Samsung
 	- 8. Motorola
+~~~
 
 Методы модифицирующие дерево
 ----------------------------
@@ -265,7 +290,8 @@ $category2->prependTo($node);
 
 ### Методы перемещения узлов
 
-Этих методов также довольно много, поэтому использование будет показано на примерах, а более подробно обо всех можно узнать в API.
+Этих методов также довольно много, поэтому использование будет показано на
+примерах, а более подробно обо всех можно узнать в API.
 
 Начнем модификацию дерева:
 ~~~
@@ -296,6 +322,7 @@ foreach(array($audi,$ford,$mercedes) as $category)
 
 Результат в виде дерева:
 
+~~~
 - 1. Mobile phones
 	- 6. iPhone
 	- 7. Samsung
@@ -306,10 +333,12 @@ foreach(array($audi,$ford,$mercedes) as $category)
 	- 3. Audi
 	- 4. Ford
 	- 5. Mercedes
+~~~
 
 ### Перемещение узла в качестве нового корня
 
-Для этого в поведении присутствует метод moveAsRoot(), который преобразует узел в новый корень, а все его дочерние узлы становятся потомками нового корня.
+Для этого в поведении присутствует метод `moveAsRoot()`, который преобразует узел
+в новый корень, а все его дочерние узлы становятся потомками нового корня.
 
 Пример использования:
 ~~~
@@ -320,7 +349,7 @@ $node->moveAsRoot();
 
 ### Идентификация узлов дерева
 
-Для этого в поведении присутствуют методы isRoot(), isLeaf(), isDescendantOf().
+Для этого в поведении присутствуют методы `isRoot()`, `isLeaf()`, `isDescendantOf()`.
 
 Пример использования:
 ~~~

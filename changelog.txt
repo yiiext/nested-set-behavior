@@ -1,6 +1,7 @@
 1.02
 ----
 - Added moveAsRoot() method (creocoder)
+- Updated readmes (Sam Dark)
 
 1.01
 ----
