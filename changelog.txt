@@ -1,3 +1,9 @@
+1.03
+----
+- Class renamed to NestedSetBehavior (creocoder)
+- Rare bug with cache correction after NestedSetBehavior::addNode() fixed (creocoder)
+- Readmes non-recursive tree traversal algorithm fix (creocoder)
+
 1.02
 ----
 - Added moveAsRoot() method (creocoder)

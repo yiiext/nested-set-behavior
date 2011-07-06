@@ -1,6 +1,6 @@
 <?php
 /**
- * ENestedSetBehavior class file.
+ * NestedSetBehavior class file.
  *
  * @author Alexander Kochetov <creocoder@gmail.com>
  * @link http://code.google.com/p/yiiext/
@@ -9,10 +9,10 @@
 /**
  * Provides nested set functionality for a model.
  *
- * @version 1.02
+ * @version 1.03
  * @package yiiext.behaviors.model.trees
  */
-class ENestedSetBehavior extends CActiveRecordBehavior
+class NestedSetBehavior extends CActiveRecordBehavior
 {
 	public $hasManyRoots=false;
 	public $rootAttribute='root';
@@ -451,7 +451,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 
 			throw $e;
 		}
-		
+
 		return true;
 	}
 
@@ -539,7 +539,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($this->_ignoreEvent)
 			return true;
 		else
-			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::save() method when ENestedSetBehavior attached.'));
+			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::save() method when NestedSetBehavior attached.'));
 	}
 
 	/**
@@ -551,7 +551,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 		if($this->_ignoreEvent)
 			return true;
 		else
-			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::delete() method when ENestedSetBehavior attached.'));
+			throw new CDbException(Yii::t('yiiext','You should not use CActiveRecord::delete() method when NestedSetBehavior attached.'));
 	}
 
 	/**
@@ -837,7 +837,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Correct cache for {@link ENestedSetBehavior::delete()} and {@link ENestedSetBehavior::deleteNode()}.
+	 * Correct cache for {@link NestedSetBehavior::delete()} and {@link NestedSetBehavior::deleteNode()}.
 	 */
 	private function correctCachedOnDelete()
 	{
@@ -869,7 +869,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Correct cache for {@link ENestedSetBehavior::addNode()}.
+	 * Correct cache for {@link NestedSetBehavior::addNode()}.
 	 * @param int $key.
 	 */
 	private function correctCachedOnAddNode($key)
@@ -884,6 +884,9 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 			if($this->hasManyRoots && $owner->{$this->rootAttribute}!==$node->{$this->rootAttribute})
 				continue;
 
+			if($owner===$node)
+				continue;
+
 			if($node->{$this->leftAttribute}>=$key)
 				$node->{$this->leftAttribute}+=2;
 
@@ -893,7 +896,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Correct cache for {@link ENestedSetBehavior::moveNode()}.
+	 * Correct cache for {@link NestedSetBehavior::moveNode()}.
 	 * @param int $key.
 	 * @param int $levelDelta.
 	 */
@@ -944,7 +947,7 @@ class ENestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Correct cache for {@link ENestedSetBehavior::moveNode()}.
+	 * Correct cache for {@link NestedSetBehavior::moveNode()}.
 	 * @param int $key.
 	 * @param int $levelDelta.
 	 * @param int $root.

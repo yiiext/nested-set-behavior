@@ -15,8 +15,8 @@ Active Record моделей.
 public function behaviors()
 {
     return array(
-        'ENestedSetBehavior'=>array(
-            'class'=>'ext.yiiext.behaviors.trees.ENestedSetBehavior',
+        'NestedSetBehavior'=>array(
+            'class'=>'ext.yiiext.behaviors.trees.NestedSetBehavior',
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
             'levelAttribute'=>'level',
@@ -69,7 +69,7 @@ public function behaviors()
 
 ### Выборка всех корней
 
-Используем метод `ENestedSetBehavior::roots()`:
+Используем метод `NestedSetBehavior::roots()`:
 ~~~
 [php]
 $roots=Category::model()->roots()->findAll();
@@ -81,7 +81,7 @@ $roots=Category::model()->roots()->findAll();
 
 ### Выборка всех потомков узла
 
-Используем метод `ENestedSetBehavior::descendants()`:
+Используем метод `NestedSetBehavior::descendants()`:
 
 ~~~
 [php]
@@ -95,7 +95,7 @@ $descendants=$category->descendants()->findAll();
 
 ### Выборка прямых потомков узла
 
-Используем метод `ENestedSetBehavior::children()`:
+Используем метод `NestedSetBehavior::children()`:
 
 ~~~
 [php]
@@ -109,7 +109,7 @@ $descendants=$category->children()->findAll();
 
 ### Выборка всех предков узла
 
-Используем метод `ENestedSetBehavior::ancestors()`:
+Используем метод `NestedSetBehavior::ancestors()`:
 
 ~~~
 [php]
@@ -123,7 +123,7 @@ $descendants=$category->ancestors()->findAll();
 
 ### Выборка предка узла
 
-Используем метод `ENestedSetBehavior::getParent()`:
+Используем метод `NestedSetBehavior::getParent()`:
 
 ~~~
 [php]
@@ -137,8 +137,8 @@ $parent=$category->parent;
 
 ### Выборка соседей узла
 
-Используем методы `ENestedSetBehavior::getPrevSibling()` или
-`ENestedSetBehavior::getNextSibling()`:
+Используем методы `NestedSetBehavior::getPrevSibling()` или
+`NestedSetBehavior::getNextSibling()`:
 
 ~~~
 [php]
@@ -173,7 +173,7 @@ Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array(
 
 ### Создание корневых узлов
 
-Создание корня может быть осуществлено при помощи метода ENestedSetBehavior::saveNode().
+Создание корня может быть осуществлено при помощи метода NestedSetBehavior::saveNode().
 В режиме работы «одно дерево» может быть создан только один корень, в противном
 случае вы получите CException.
 
@@ -383,8 +383,12 @@ foreach($categories as $n=>$category)
 	else
 	{
 		echo CHtml::closeTag('li')."\n";
-		echo CHtml::closeTag('ul')."\n";
-		echo CHtml::closeTag('li')."\n";
+
+		for($i=$level-$model->level;$i;$i--)
+		{
+			echo CHtml::closeTag('ul')."\n";
+			echo CHtml::closeTag('li')."\n";
+		}
 	}
 
 	echo CHtml::openTag('li');

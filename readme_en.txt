@@ -14,8 +14,8 @@ First you need to configure model as follows:
 public function behaviors()
 {
     return array(
-        'ENestedSetBehavior'=>array(
-            'class'=>'ext.yiiext.behaviors.trees.ENestedSetBehavior',
+        'NestedSetBehavior'=>array(
+            'class'=>'ext.yiiext.behaviors.trees.NestedSetBehavior',
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
             'levelAttribute'=>'level',
@@ -63,7 +63,7 @@ In this example we have two trees. Tree roots are ones with ID=1 and ID=7.
 
 ### Getting all roots
 
-Using `ENestedSetBehavior::roots()`:
+Using `NestedSetBehavior::roots()`:
 ~~~
 [php]
 $roots=Category::model()->roots()->findAll();
@@ -75,7 +75,7 @@ Array of Active Record objects corresponding to Mobile phones and Cars nodes.
 
 ### Getting all descendants of a node
 
-Using `ENestedSetBehavior::descendants()`:
+Using `NestedSetBehavior::descendants()`:
 
 ~~~
 [php]
@@ -89,7 +89,7 @@ Array of Active Record objects corresponding to iPhone, Samsung, X100, C200 and 
 
 ### Getting all children of a node
 
-Using `ENestedSetBehavior::children()`:
+Using `NestedSetBehavior::children()`:
 
 ~~~
 [php]
@@ -103,7 +103,7 @@ Array of Active Record objects corresponding to iPhone, Samsung and Motorola.
 
 ### Getting all ancestors of a node
 
-Using `ENestedSetBehavior::ancestors()`:
+Using `NestedSetBehavior::ancestors()`:
 
 ~~~
 [php]
@@ -117,7 +117,7 @@ Array of Active Record objects corresponding to Samsung and Mobile phones.
 
 ### Getting parent of a node
 
-Using `ENestedSetBehavior::getParent()`:
+Using `NestedSetBehavior::getParent()`:
 
 ~~~
 [php]
@@ -131,8 +131,8 @@ Array of Active Record objects corresponding to Cars.
 
 ### Getting node siblings
 
-Using `ENestedSetBehavior::getPrevSibling()` or
-`ENestedSetBehavior::getNextSibling()`:
+Using `NestedSetBehavior::getPrevSibling()` or
+`NestedSetBehavior::getNextSibling()`:
 
 ~~~
 [php]
@@ -167,7 +167,7 @@ In this section we'll build a tree like the one used in the previous section.
 
 ### Creating root nodes
 
-You can create a root node using `ENestedSetBehavior::saveNode()`.
+You can create a root node using `NestedSetBehavior::saveNode()`.
 In a single tree per table mode you can create only one root node. If you'll attempt
 to create more there will be CException thrown.
 
@@ -374,8 +374,12 @@ foreach($categories as $n=>$category)
 	else
 	{
 		echo CHtml::closeTag('li')."\n";
-		echo CHtml::closeTag('ul')."\n";
-		echo CHtml::closeTag('li')."\n";
+
+		for($i=$level-$model->level;$i;$i--)
+		{
+			echo CHtml::closeTag('ul')."\n";
+			echo CHtml::closeTag('li')."\n";
+		}
 	}
 
 	echo CHtml::openTag('li');
