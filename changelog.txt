@@ -1,3 +1,7 @@
+1.04
+----
+- Fix for $depth parameter of NestedSetBehavior::ancestors() method (creocoder)
+
 1.03
 ----
 - Class renamed to NestedSetBehavior (creocoder)

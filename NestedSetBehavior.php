@@ -9,7 +9,7 @@
 /**
  * Provides nested set functionality for a model.
  *
- * @version 1.03
+ * @version 1.04
  * @package yiiext.behaviors.model.trees
  */
 class NestedSetBehavior extends CActiveRecordBehavior
@@ -83,7 +83,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		));
 
 		if($depth!==null)
-			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->levelAttribute).'>='.($owner->{$this->levelAttribute}+$depth));
+			$criteria->addCondition($alias.'.'.$db->quoteColumnName($this->levelAttribute).'>='.($owner->{$this->levelAttribute}-$depth));
 
 		if($this->hasManyRoots)
 		{
