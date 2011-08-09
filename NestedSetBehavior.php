@@ -9,7 +9,7 @@
 /**
  * Provides nested set functionality for a model.
  *
- * @version 1.04
+ * @version 1.05
  * @package yiiext.behaviors.model.trees
  */
 class NestedSetBehavior extends CActiveRecordBehavior
@@ -224,7 +224,10 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			throw new CDbException(Yii::t('yiiext','The node cannot be deleted because it is already deleted.'));
 
 		$db=$owner->getDbConnection();
-		$transaction=$db->beginTransaction();
+		$extTransFlag=$db->getCurrentTransaction();
+
+		if($extTransFlag===null)
+			$transaction=$db->beginTransaction();
 
 		try
 		{
@@ -252,18 +255,23 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 			if(!$result)
 			{
-				$transaction->rollBack();
+				if($extTransFlag===null)
+					$transaction->rollBack();
 
 				return false;
 			}
 
 			$this->shiftLeftRight($owner->{$this->rightAttribute}+1,$owner->{$this->leftAttribute}-$owner->{$this->rightAttribute}-1);
-			$transaction->commit();
+
+			if($extTransFlag===null)
+				$transaction->commit();
+
 			$this->correctCachedOnDelete();
 		}
 		catch(Exception $e)
 		{
-			$transaction->rollBack();
+			if($extTransFlag===null)
+				$transaction->rollBack();
 
 			throw $e;
 		}

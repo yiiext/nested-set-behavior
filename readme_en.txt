@@ -15,7 +15,7 @@ public function behaviors()
 {
     return array(
         'NestedSetBehavior'=>array(
-            'class'=>'ext.yiiext.behaviors.trees.NestedSetBehavior',
+            'class'=>'ext.yiiext.behaviors.model.trees.NestedSetBehavior',
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
             'levelAttribute'=>'level',
@@ -173,10 +173,10 @@ to create more there will be CException thrown.
 
 ~~~
 [php]
-$root=new Root;
+$root=new Category;
 $root->title='Mobile Phones';
 $root->saveNode();
-$root=new Root;
+$root=new Category;
 $root->title='Cars';
 $root->saveNode();
 ~~~

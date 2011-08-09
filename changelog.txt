@@ -1,3 +1,7 @@
+1.05
+----
+- External transaction support for NestedSetBehavior::delete() method (creocoder)
+
 1.04
 ----
 - Fix for $depth parameter of NestedSetBehavior::ancestors() method (creocoder)

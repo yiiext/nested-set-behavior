@@ -16,7 +16,7 @@ public function behaviors()
 {
     return array(
         'NestedSetBehavior'=>array(
-            'class'=>'ext.yiiext.behaviors.trees.NestedSetBehavior',
+            'class'=>'ext.yiiext.behaviors.model.trees.NestedSetBehavior',
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
             'levelAttribute'=>'level',
@@ -179,10 +179,10 @@ Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array(
 
 ~~~
 [php]
-$root=new Root;
+$root=new Category;
 $root->title='Mobile Phones';
 $root->saveNode();
-$root=new Root;
+$root=new Category;
 $root->title='Cars';
 $root->saveNode();
 ~~~
