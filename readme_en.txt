@@ -149,12 +149,14 @@ Array of Active Record objects corresponding to Mercedes.
 You can get the whole tree using standard AR methods like the following.
 
 For single tree per table:
+
 ~~~
 [php]
 Category::model()->findAll(array('order'=>'lft'));
 ~~~
 
 For multiple trees per table:
+
 ~~~
 [php]
 Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array($root_id));
@@ -332,6 +334,7 @@ There is a special `moveAsRoot()` method that allows moving a node and making it
 a new root. All descendants are moved as well in this case.
 
 Example:
+
 ~~~
 [php]
 $node=Category::model()->findByPk(10);
@@ -343,6 +346,7 @@ $node->moveAsRoot();
 There are three methods to get node type: `isRoot()`, `isLeaf()`, `isDescendantOf()`.
 
 Example:
+
 ~~~
 [php]
 $root=Category::model()->findByPk(1);
