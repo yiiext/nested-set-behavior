@@ -3,7 +3,7 @@
  * NestedSetBehavior class file.
  *
  * @author Alexander Kochetov <creocoder@gmail.com>
- * @link http://code.google.com/p/yiiext/
+ * @link https://github.com/yiiext/nested-set-behavior
  */
 
 /**
