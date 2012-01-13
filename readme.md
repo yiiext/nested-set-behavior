@@ -379,7 +379,7 @@ foreach($categories as $n=>$category)
 	{
 		echo CHtml::closeTag('li')."\n";
 
-		for($i=$level-$model->level;$i;$i--)
+		for($i=$level-$category->level;$i;$i--)
 		{
 			echo CHtml::closeTag('ul')."\n";
 			echo CHtml::closeTag('li')."\n";
