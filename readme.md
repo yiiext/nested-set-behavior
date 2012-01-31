@@ -19,6 +19,7 @@ public function behaviors()
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
             'levelAttribute'=>'level',
+        ),
     );
 }
 ~~~
@@ -355,7 +356,7 @@ CVarDumper::dump($root->isLeaf()); //false;
 $node=Category::model()->findByPk(9);
 CVarDumper::dump($node->isDescendantOf($root)); //true;
 CVarDumper::dump($node->isRoot()); //false;
-CVarDumper::dump($root->isLeaf()); //true;
+CVarDumper::dump($node->isLeaf()); //true;
 $samsung=Category::model()->findByPk(7);
 CVarDumper::dump($node->isDescendantOf($samsung)); //true;
 ~~~
