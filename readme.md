@@ -14,7 +14,7 @@ First you need to configure model as follows:
 public function behaviors()
 {
     return array(
-        'NestedSetBehavior'=>array(
+        'nestedSetBehavior'=>array(
             'class'=>'ext.yiiext.behaviors.model.trees.NestedSetBehavior',
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
@@ -118,12 +118,12 @@ Array of Active Record objects corresponding to Samsung and Mobile phones.
 
 ### Getting parent of a node
 
-Using `NestedSetBehavior::getParent()`:
+Using `NestedSetBehavior::parent()`:
 
 ~~~
 [php]
 $category=Category::model()->findByPk(9);
-$parent=$category->parent;
+$parent=$category->parent()->find();
 ~~~
 
 Result:
@@ -132,13 +132,13 @@ Array of Active Record objects corresponding to Cars.
 
 ### Getting node siblings
 
-Using `NestedSetBehavior::getPrevSibling()` or
-`NestedSetBehavior::getNextSibling()`:
+Using `NestedSetBehavior::prev()` or
+`NestedSetBehavior::next()`:
 
 ~~~
 [php]
 $category=Category::model()->findByPk(9);
-$nextSibling=$category->nextSibling;
+$nextSibling=$category->next()->find();
 ~~~
 
 Result:

@@ -9,7 +9,7 @@
 /**
  * Provides nested set functionality for a model.
  *
- * @version 1.05
+ * @version 1.06
  * @package yiiext.behaviors.model.trees
  */
 class NestedSetBehavior extends CActiveRecordBehavior
@@ -108,10 +108,10 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	}
 
 	/**
-	 * Gets record of node parent.
-	 * @return CActiveRecord the record found. Null if no record is found.
+	 * Named scope. Gets parent of node.
+	 * @return CActiveRecord the owner.
 	 */
-	public function getParent()
+	public function parent()
 	{
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
@@ -130,14 +130,14 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
 		}
 
-		return $owner->find();
+		return $owner;
 	}
 
 	/**
-	 * Gets record of previous sibling.
-	 * @return CActiveRecord the record found. Null if no record is found.
+	 * Named scope. Gets previous sibling of node.
+	 * @return CActiveRecord the owner.
 	 */
-	public function getPrevSibling()
+	public function prev()
 	{
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
@@ -151,14 +151,14 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
 		}
 
-		return $owner->find();
+		return $owner;
 	}
 
 	/**
-	 * Gets record of next sibling.
-	 * @return CActiveRecord the record found. Null if no record is found.
+	 * Named scope. Gets next sibling of node.
+	 * @return CActiveRecord the owner.
 	 */
-	public function getNextSibling()
+	public function next()
 	{
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
@@ -172,7 +172,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
 		}
 
-		return $owner->find();
+		return $owner;
 	}
 
 	/**
@@ -541,6 +541,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	/**
 	 * Handle 'beforeSave' event of the owner.
 	 * @param CEvent $event event parameter.
+	 * @return boolean.
 	 */
 	public function beforeSave($event)
 	{
@@ -553,6 +554,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	/**
 	 * Handle 'beforeDelete' event of the owner.
 	 * @param CEvent $event event parameter.
+	 * @return boolean.
 	 */
 	public function beforeDelete($event)
 	{
@@ -592,6 +594,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @param int $levelUp.
 	 * @param boolean $runValidation.
 	 * @param array $attributes.
+	 * @return boolean.
 	 */
 	private function addNode($target,$key,$levelUp,$runValidation,$attributes)
 	{
@@ -660,6 +663,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * @param array $attributes.
+	 * @return boolean.
 	 */
 	private function makeRoot($attributes)
 	{
@@ -724,6 +728,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @param CActiveRecord $target.
 	 * @param int $key.
 	 * @param int $levelUp.
+	 * @return boolean.
 	 */
 	private function moveNode($target,$key,$levelUp)
 	{

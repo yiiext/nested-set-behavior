@@ -15,7 +15,7 @@ Active Record моделей.
 public function behaviors()
 {
     return array(
-        'NestedSetBehavior'=>array(
+        'nestedSetBehavior'=>array(
             'class'=>'ext.yiiext.behaviors.model.trees.NestedSetBehavior',
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
@@ -124,12 +124,12 @@ $descendants=$category->ancestors()->findAll();
 
 ### Выборка предка узла
 
-Используем метод `NestedSetBehavior::getParent()`:
+Используем метод `NestedSetBehavior::parent()`:
 
 ~~~
 [php]
 $category=Category::model()->findByPk(9);
-$parent=$category->parent;
+$parent=$category->parent()->find();
 ~~~
 
 Результат:
@@ -138,13 +138,13 @@ $parent=$category->parent;
 
 ### Выборка соседей узла
 
-Используем методы `NestedSetBehavior::getPrevSibling()` или
-`NestedSetBehavior::getNextSibling()`:
+Используем методы `NestedSetBehavior::prev()` или
+`NestedSetBehavior::next()`:
 
 ~~~
 [php]
 $category=Category::model()->findByPk(9);
-$nextSibling=$category->nextSibling;
+$nextSibling=$category->next()->find();
 ~~~
 
 Результат:
