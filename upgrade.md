@@ -10,7 +10,7 @@ for both A and B.
 
 Upgrading from v1.0.5
 ---------------------
-- В связи с изменением названия и типа возвращаемого результата методов getParent(), getPrevSibling(), getNextSibling() необходимо изменить код:
+- You need to change following code:
 ~~~
 [php]
 $parent=$node->getParent();
