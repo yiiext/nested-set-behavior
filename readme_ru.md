@@ -71,6 +71,7 @@ public function behaviors()
 ### Выборка всех корней
 
 Используем метод `NestedSetBehavior::roots()`:
+
 ~~~
 [php]
 $roots=Category::model()->roots()->findAll();
