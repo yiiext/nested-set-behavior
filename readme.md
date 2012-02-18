@@ -65,6 +65,7 @@ In this example we have two trees. Tree roots are ones with ID=1 and ID=7.
 ### Getting all roots
 
 Using `NestedSetBehavior::roots()`:
+
 ~~~
 [php]
 $roots=Category::model()->roots()->findAll();
