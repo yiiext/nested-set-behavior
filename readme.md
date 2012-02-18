@@ -9,8 +9,7 @@ Installing and configuring
 
 First you need to configure model as follows:
 
-~~~
-[php]
+```php
 public function behaviors()
 {
     return array(
@@ -22,7 +21,7 @@ public function behaviors()
         ),
     );
 }
-~~~
+```
 
 There is no need to validate fields specified in `leftAttribute`,
 `rightAttribute`, `rootAttribute` and `levelAttribute` options. Moreover,
@@ -66,10 +65,9 @@ In this example we have two trees. Tree roots are ones with ID=1 and ID=7.
 
 Using `NestedSetBehavior::roots()`:
 
-~~~
-[php]
+```php
 $roots=Category::model()->roots()->findAll();
-~~~
+```
 
 Result:
 
@@ -79,11 +77,10 @@ Array of Active Record objects corresponding to Mobile phones and Cars nodes.
 
 Using `NestedSetBehavior::descendants()`:
 
-~~~
-[php]
+```php
 $category=Category::model()->findByPk(1);
 $descendants=$category->descendants()->findAll();
-~~~
+```
 
 Result:
 
@@ -93,11 +90,10 @@ Array of Active Record objects corresponding to iPhone, Samsung, X100, C200 and 
 
 Using `NestedSetBehavior::children()`:
 
-~~~
-[php]
+```php
 $category=Category::model()->findByPk(1);
 $descendants=$category->children()->findAll();
-~~~
+```
 
 Result:
 
@@ -107,11 +103,10 @@ Array of Active Record objects corresponding to iPhone, Samsung and Motorola.
 
 Using `NestedSetBehavior::ancestors()`:
 
-~~~
-[php]
+```php
 $category=Category::model()->findByPk(5);
 $descendants=$category->ancestors()->findAll();
-~~~
+```
 
 Result:
 
@@ -121,11 +116,10 @@ Array of Active Record objects corresponding to Samsung and Mobile phones.
 
 Using `NestedSetBehavior::parent()`:
 
-~~~
-[php]
+```php
 $category=Category::model()->findByPk(9);
 $parent=$category->parent()->find();
-~~~
+```
 
 Result:
 
@@ -136,11 +130,10 @@ Array of Active Record objects corresponding to Cars.
 Using `NestedSetBehavior::prev()` or
 `NestedSetBehavior::next()`:
 
-~~~
-[php]
+```php
 $category=Category::model()->findByPk(9);
 $nextSibling=$category->next()->find();
-~~~
+```
 
 Result:
 
@@ -152,17 +145,15 @@ You can get the whole tree using standard AR methods like the following.
 
 For single tree per table:
 
-~~~
-[php]
+```php
 Category::model()->findAll(array('order'=>'lft'));
-~~~
+```
 
 For multiple trees per table:
 
-~~~
-[php]
+```php
 Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array($root_id));
-~~~
+```
 
 Modifying a tree
 ----------------
@@ -175,15 +166,14 @@ You can create a root node using `NestedSetBehavior::saveNode()`.
 In a single tree per table mode you can create only one root node. If you'll attempt
 to create more there will be CException thrown.
 
-~~~
-[php]
+```php
 $root=new Category;
 $root->title='Mobile Phones';
 $root->saveNode();
 $root=new Category;
 $root->title='Cars';
 $root->saveNode();
-~~~
+```
 
 Result:
 
@@ -198,8 +188,7 @@ There are multiple methods allowing you adding child nodes. To get more info
 about these refer to API. Let's use these
 to add nodes to the tree we have:
 
-~~~
-[php]
+```php
 $category1=new Category;
 $category1->title='Ford';
 $category2=new Category;
@@ -210,7 +199,7 @@ $root=Category::model()->findByPk(1);
 $category1->appendTo($root);
 $category2->insertAfter($category1);
 $category3->insertBefore($category1);
-~~~
+```
 
 Result:
 
@@ -224,8 +213,7 @@ Result:
 
 Logically the tree above doesn't looks correct. We'll fix it later.
 
-~~~
-[php]
+```php
 $category1=new Category;
 $category1->title='Samsung';
 $category2=new Category;
@@ -236,7 +224,7 @@ $root=Category::model()->findByPk(2);
 $category1->appendTo($root);
 $category2->insertAfter($category1);
 $category3->prependTo($root);
-~~~
+```
 
 Result:
 
@@ -251,8 +239,7 @@ Result:
 	- 8. Motorola
 ~~~
 
-~~~
-[php]
+```php
 $category1=new Category;
 $category1->title='X100';
 $category2=new Category;
@@ -260,7 +247,7 @@ $category2->title='C200';
 $node=Category::model()->findByPk(3);
 $category1->appendTo($node);
 $category2->prependTo($node);
-~~~
+```
 
 Result:
 
@@ -289,8 +276,7 @@ about these refer to API.
 
 Let's start:
 
-~~~
-[php]
+```php
 // move phones to the proper place
 $x100=Category::model()->findByPk(10);
 $c200=Category::model()->findByPk(9);
@@ -313,7 +299,7 @@ $mercedes=Category::model()->findByPk(5);
 
 foreach(array($audi,$ford,$mercedes) as $category)
     $category->moveAsLast($cars);
-~~~
+```
 
 Result:
 
@@ -337,11 +323,10 @@ a new root. All descendants are moved as well in this case.
 
 Example:
 
-~~~
-[php]
+```php
 $node=Category::model()->findByPk(10);
 $node->moveAsRoot();
-~~~
+```
 
 ### Identifying node type
 
@@ -349,8 +334,7 @@ There are three methods to get node type: `isRoot()`, `isLeaf()`, `isDescendantO
 
 Example:
 
-~~~
-[php]
+```php
 $root=Category::model()->findByPk(1);
 CVarDumper::dump($root->isRoot()); //true;
 CVarDumper::dump($root->isLeaf()); //false;
@@ -360,15 +344,14 @@ CVarDumper::dump($node->isRoot()); //false;
 CVarDumper::dump($node->isLeaf()); //true;
 $samsung=Category::model()->findByPk(7);
 CVarDumper::dump($node->isDescendantOf($samsung)); //true;
-~~~
+```
 
 Useful code
 ------------
 
 ### Non-recursive tree traversal
 
-~~~
-[php]
+```php
 $level=0;
 
 foreach($categories as $n=>$category)
@@ -398,4 +381,4 @@ for($i=$level;$i;$i--)
 	echo CHtml::closeTag('li')."\n";
 	echo CHtml::closeTag('ul')."\n";
 }
-~~~
+```
