@@ -10,18 +10,18 @@ for both A and B.
 
 Upgrading from v1.0.5
 ---------------------
+
 - You need to change following code:
+
 ~~~
-[php]
 $parent=$node->getParent();
 $prevSibling=$node->getPrevSibling();
 $nextSibling=$node->getNextSibling();
 ~~~
 
-на
+to
 
 ~~~
-[php]
 $parent=$node->parent()->find();
 $prevSibling=$node->prev()->find();
 $nextSibling=$node->next()->fint();
