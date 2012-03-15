@@ -113,6 +113,10 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function parent()
 	{
+		// if it is new and unsaved node - parent can't be retrieven, because we don't have rgt nad lft
+		if (isset($owner->{$this->leftAttribute}, $owner->{$this->rightAttribute})==false)
+			return null;
+			
 		$owner=$this->getOwner();
 		$db=$owner->getDbConnection();
 		$criteria=$owner->getDbCriteria();
