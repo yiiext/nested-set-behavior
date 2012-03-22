@@ -224,9 +224,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			throw new CDbException(Yii::t('yiiext','The node cannot be deleted because it is already deleted.'));
 
 		$db=$owner->getDbConnection();
-		$extTransFlag=$db->getCurrentTransaction();
 
-		if($extTransFlag===null)
+		if($db->getCurrentTransaction())
 			$transaction=$db->beginTransaction();
 
 		try
@@ -255,7 +254,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 			if(!$result)
 			{
-				if($extTransFlag===null)
+				if(isset($transaction))
 					$transaction->rollBack();
 
 				return false;
@@ -263,14 +262,14 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 			$this->shiftLeftRight($owner->{$this->rightAttribute}+1,$owner->{$this->leftAttribute}-$owner->{$this->rightAttribute}-1);
 
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->commit();
 
 			$this->correctCachedOnDelete();
 		}
 		catch(Exception $e)
 		{
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->rollBack();
 
 			throw $e;
@@ -421,9 +420,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			throw new CException(Yii::t('yiiext','The node already is root node.'));
 
 		$db=$owner->getDbConnection();
-		$extTransFlag=$db->getCurrentTransaction();
 
-		if($extTransFlag===null)
+		if($db->getCurrentTransaction())
 			$transaction=$db->beginTransaction();
 
 		try
@@ -447,14 +445,14 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 			$this->shiftLeftRight($right+1,$left-$right-1);
 
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->commit();
 
 			$this->correctCachedOnMoveBetweenTrees(1,$levelDelta,$owner->getPrimaryKey());
 		}
 		catch(Exception $e)
 		{
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->rollBack();
 
 			throw $e;
@@ -622,9 +620,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			$owner->{$this->rootAttribute}=$target->{$this->rootAttribute};
 
 		$db=$owner->getDbConnection();
-		$extTransFlag=$db->getCurrentTransaction();
 
-		if($extTransFlag===null)
+		if($db->getCurrentTransaction())
 			$transaction=$db->beginTransaction();
 
 		try
@@ -639,20 +636,20 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 			if(!$result)
 			{
-				if($extTransFlag===null)
+				if(isset($transaction))
 					$transaction->rollBack();
 
 				return false;
 			}
 
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->commit();
 
 			$this->correctCachedOnAddNode($key);
 		}
 		catch(Exception $e)
 		{
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->rollBack();
 
 			throw $e;
@@ -675,9 +672,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		if($this->hasManyRoots)
 		{
 			$db=$owner->getDbConnection();
-			$extTransFlag=$db->getCurrentTransaction();
 
-			if($extTransFlag===null)
+			if($db->getCurrentTransaction())
 				$transaction=$db->beginTransaction();
 
 			try
@@ -688,7 +684,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 				if(!$result)
 				{
-					if($extTransFlag===null)
+					if(isset($transaction))
 						$transaction->rollBack();
 
 					return false;
@@ -697,12 +693,12 @@ class NestedSetBehavior extends CActiveRecordBehavior
 				$pk=$owner->{$this->rootAttribute}=$owner->getPrimaryKey();
 				$owner->updateByPk($pk,array($this->rootAttribute=>$pk));
 
-				if($extTransFlag===null)
+				if(isset($transaction))
 					$transaction->commit();
 			}
 			catch(Exception $e)
 			{
-				if($extTransFlag===null)
+				if(isset($transaction))
 					$transaction->rollBack();
 
 				throw $e;
@@ -753,9 +749,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			throw new CException(Yii::t('yiiext','The target node should not be root.'));
 
 		$db=$owner->getDbConnection();
-		$extTransFlag=$db->getCurrentTransaction();
 
-		if($extTransFlag===null)
+		if($db->getCurrentTransaction())
 			$transaction=$db->beginTransaction();
 
 		try
@@ -789,7 +784,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 				$this->shiftLeftRight($right+1,$left-$right-1);
 
-				if($extTransFlag===null)
+				if(isset($transaction))
 					$transaction->commit();
 
 				$this->correctCachedOnMoveBetweenTrees($key,$levelDelta,$target->{$this->rootAttribute});
@@ -832,7 +827,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 				$this->shiftLeftRight($right+1,-$delta);
 
-				if($extTransFlag===null)
+				if(isset($transaction))
 					$transaction->commit();
 
 				$this->correctCachedOnMoveNode($key,$levelDelta);
@@ -840,7 +835,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		}
 		catch(Exception $e)
 		{
-			if($extTransFlag===null)
+			if(isset($transaction))
 				$transaction->rollBack();
 
 			throw $e;
