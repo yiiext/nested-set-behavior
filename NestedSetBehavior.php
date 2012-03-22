@@ -225,7 +225,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 		$db=$owner->getDbConnection();
 
-		if($db->getCurrentTransaction())
+		if($db->getCurrentTransaction()===null)
 			$transaction=$db->beginTransaction();
 
 		try
@@ -421,7 +421,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 		$db=$owner->getDbConnection();
 
-		if($db->getCurrentTransaction())
+		if($db->getCurrentTransaction()===null)
 			$transaction=$db->beginTransaction();
 
 		try
@@ -621,7 +621,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 		$db=$owner->getDbConnection();
 
-		if($db->getCurrentTransaction())
+		if($db->getCurrentTransaction()===null)
 			$transaction=$db->beginTransaction();
 
 		try
@@ -673,7 +673,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		{
 			$db=$owner->getDbConnection();
 
-			if($db->getCurrentTransaction())
+			if($db->getCurrentTransaction()===null)
 				$transaction=$db->beginTransaction();
 
 			try
@@ -750,7 +750,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 		$db=$owner->getDbConnection();
 
-		if($db->getCurrentTransaction())
+		if($db->getCurrentTransaction()===null)
 			$transaction=$db->beginTransaction();
 
 		try
