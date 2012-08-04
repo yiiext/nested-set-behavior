@@ -255,7 +255,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			if(!$result)
 			{
 				if(isset($transaction))
-					$transaction->rollBack();
+					$transaction->rollback();
 
 				return false;
 			}
@@ -270,7 +270,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		catch(Exception $e)
 		{
 			if(isset($transaction))
-				$transaction->rollBack();
+				$transaction->rollback();
 
 			throw $e;
 		}
@@ -453,7 +453,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		catch(Exception $e)
 		{
 			if(isset($transaction))
-				$transaction->rollBack();
+				$transaction->rollback();
 
 			throw $e;
 		}
@@ -637,7 +637,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			if(!$result)
 			{
 				if(isset($transaction))
-					$transaction->rollBack();
+					$transaction->rollback();
 
 				return false;
 			}
@@ -650,7 +650,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		catch(Exception $e)
 		{
 			if(isset($transaction))
-				$transaction->rollBack();
+				$transaction->rollback();
 
 			throw $e;
 		}
@@ -685,7 +685,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 				if(!$result)
 				{
 					if(isset($transaction))
-						$transaction->rollBack();
+						$transaction->rollback();
 
 					return false;
 				}
@@ -699,7 +699,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			catch(Exception $e)
 			{
 				if(isset($transaction))
-					$transaction->rollBack();
+					$transaction->rollback();
 
 				throw $e;
 			}
@@ -836,7 +836,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 		catch(Exception $e)
 		{
 			if(isset($transaction))
-				$transaction->rollBack();
+				$transaction->rollback();
 
 			throw $e;
 		}
