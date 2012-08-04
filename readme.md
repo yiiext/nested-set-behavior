@@ -1,6 +1,8 @@
 Nested Set
 ==========
 
+![githalytics.com alpha](https://cruel-carlota.pagodabox.com/bd33118cce27cfe542b46cdd65dac40b)
+
 This extension allows managing trees stored in database as nested sets.
 It's implemented as Active Record behavior.
 
