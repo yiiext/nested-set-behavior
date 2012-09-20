@@ -33,12 +33,12 @@ In case of storing a single tree per database, DB structure can be built with
 trees you'll need `extensions/yiiext/behaviors/trees/schema_many_roots.sql`.
 
 By default `leftAttribute`, `rightAttribute` and `levelAttribute` values are
-matching filed names in default DB schemas so you can skip configuring these.
+matching field names in default DB schemas so you can skip configuring these.
 
 There are two ways this behavior can work: one tree per table and multiple trees
 per table. The mode is selected based on the value of `hasManyRoots` option that
 is `false` by default meaning single tree mode. In multiple trees mode you can
-set `rootAttribute` option to match existing filed in the table storing the tree.
+set `rootAttribute` option to match existing field in the table storing the tree.
 
 Selecting from a tree
 ---------------------
