@@ -212,7 +212,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	/**
 	 * Deletes node and it's descendants.
 	 * @return boolean whether the deletion is successful.
-     * @throws CDbException
+	 * @throws CDbException
 	 */
 	public function delete()
 	{
@@ -403,8 +403,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	/**
 	 * Move node as new root.
 	 * @return boolean whether the moving succeeds.
-     * @throws CDbException
-     * @throws CException
+	 * @throws CDbException
+	 * @throws CException
 	 */
 	public function moveAsRoot()
 	{
@@ -543,7 +543,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * Handle 'beforeSave' event of the owner.
 	 * @param CEvent $event event parameter.
 	 * @return boolean.
-     * @throws CDbException
+	 * @throws CDbException
 	 */
 	public function beforeSave($event)
 	{
@@ -557,7 +557,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * Handle 'beforeDelete' event of the owner.
 	 * @param CEvent $event event parameter.
 	 * @return boolean.
-     * @throws CDbException
+	 * @throws CDbException
 	 */
 	public function beforeDelete($event)
 	{
@@ -598,8 +598,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @param boolean $runValidation.
 	 * @param array $attributes.
 	 * @return boolean.
-     * @throws CDbException
-     * @throws CException
+	 * @throws CDbException
+	 * @throws CException
 	 */
 	private function addNode($target,$key,$levelUp,$runValidation,$attributes)
 	{
@@ -668,7 +668,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	/**
 	 * @param array $attributes.
 	 * @return boolean.
-     * @throws CException
+	 * @throws CException
 	 */
 	private function makeRoot($attributes)
 	{
@@ -733,8 +733,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @param int $key.
 	 * @param int $levelUp.
 	 * @return boolean.
-     * @throws CDbException
-     * @throws CException
+	 * @throws CDbException
+	 * @throws CException
 	 */
 	private function moveNode($target,$key,$levelUp)
 	{
