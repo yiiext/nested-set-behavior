@@ -213,6 +213,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * Deletes node and it's descendants.
 	 * @return boolean whether the deletion is successful.
 	 * @throws CDbException
+	 * @throws Exception
 	 */
 	public function delete()
 	{
@@ -405,6 +406,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean whether the moving succeeds.
 	 * @throws CDbException
 	 * @throws CException
+	 * @throws Exception
 	 */
 	public function moveAsRoot()
 	{
@@ -600,6 +602,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean.
 	 * @throws CDbException
 	 * @throws CException
+	 * @throws Exception
 	 */
 	private function addNode($target,$key,$levelUp,$runValidation,$attributes)
 	{
@@ -669,6 +672,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @param array $attributes.
 	 * @return boolean.
 	 * @throws CException
+	 * @throws Exception
 	 */
 	private function makeRoot($attributes)
 	{
@@ -735,6 +739,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 * @return boolean.
 	 * @throws CDbException
 	 * @throws CException
+	 * @throws Exception
 	 */
 	private function moveNode($target,$key,$levelUp)
 	{
