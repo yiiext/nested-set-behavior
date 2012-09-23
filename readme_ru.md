@@ -10,8 +10,7 @@ Active Record моделей.
 
 Для начала работы необходимо сконфигурировать модель следующим образом:
 
-~~~
-[php]
+~~~php
 public function behaviors()
 {
     return array(
@@ -72,8 +71,7 @@ public function behaviors()
 
 Используем метод `NestedSetBehavior::roots()`:
 
-~~~
-[php]
+~~~php
 $roots=Category::model()->roots()->findAll();
 ~~~
 
@@ -85,8 +83,7 @@ $roots=Category::model()->roots()->findAll();
 
 Используем метод `NestedSetBehavior::descendants()`:
 
-~~~
-[php]
+~~~php
 $category=Category::model()->findByPk(1);
 $descendants=$category->descendants()->findAll();
 ~~~
@@ -99,8 +96,7 @@ $descendants=$category->descendants()->findAll();
 
 Используем метод `NestedSetBehavior::children()`:
 
-~~~
-[php]
+~~~php
 $category=Category::model()->findByPk(1);
 $descendants=$category->children()->findAll();
 ~~~
@@ -113,8 +109,7 @@ $descendants=$category->children()->findAll();
 
 Используем метод `NestedSetBehavior::ancestors()`:
 
-~~~
-[php]
+~~~php
 $category=Category::model()->findByPk(5);
 $descendants=$category->ancestors()->findAll();
 ~~~
@@ -127,8 +122,7 @@ $descendants=$category->ancestors()->findAll();
 
 Используем метод `NestedSetBehavior::parent()`:
 
-~~~
-[php]
+~~~php
 $category=Category::model()->findByPk(9);
 $parent=$category->parent()->find();
 ~~~
@@ -142,8 +136,7 @@ $parent=$category->parent()->find();
 Используем методы `NestedSetBehavior::prev()` или
 `NestedSetBehavior::next()`:
 
-~~~
-[php]
+~~~php
 $category=Category::model()->findByPk(9);
 $nextSibling=$category->next()->find();
 ~~~
@@ -157,15 +150,13 @@ $nextSibling=$category->next()->find();
 Это может быть осуществлено при помощи стандартных методов Active Record.
 
 Для режима «одно дерево»:
-~~~
-[php]
+~~~php
 Category::model()->findAll(array('order'=>'lft'));
 ~~~
 
 Для режима «много деревьев»:
-~~~
-[php]
-Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array($root_id));
+~~~php
+Category::model()->findAll(array('condition'=>'root=?','order'=>'lft'),array($root));
 ~~~
 
 Описание работы методов создания узлов
@@ -179,8 +170,7 @@ Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array(
 В режиме работы «одно дерево» может быть создан только один корень, в противном
 случае вы получите CException.
 
-~~~
-[php]
+~~~php
 $root=new Category;
 $root->title='Mobile Phones';
 $root->saveNode();
@@ -202,8 +192,7 @@ $root->saveNode();
 которых будет показано на примерах. Более подробно об этих методах можно прочитать в API.
 
 Продолжим работать с деревом, полученным в предыдущем разделе:
-~~~
-[php]
+~~~php
 $category1=new Category;
 $category1->title='Ford';
 $category2=new Category;
@@ -229,8 +218,7 @@ $category3->insertBefore($category1);
 Можно заметить, что это некорректно с точки зрения логики, но в следующих разделах мы это исправим.
 
 Продолжаем:
-~~~
-[php]
+~~~php
 $category1=new Category;
 $category1->title='Samsung';
 $category2=new Category;
@@ -259,8 +247,7 @@ $category3->prependTo($root);
 И снова, не обращаем внимание на нелогичность дерева.
 
 Продолжаем:
-~~~
-[php]
+~~~php
 $category1=new Category;
 $category1->title='X100';
 $category2=new Category;
@@ -296,8 +283,7 @@ $category2->prependTo($node);
 примерах, а более подробно обо всех можно узнать в API.
 
 Начнем модификацию дерева:
-~~~
-[php]
+~~~php
 // сначала переместим модели телефонов на место
 $x100=Category::model()->findByPk(10);
 $c200=Category::model()->findByPk(9);
@@ -343,8 +329,7 @@ foreach(array($audi,$ford,$mercedes) as $category)
 в новый корень, а все его дочерние узлы становятся потомками нового корня.
 
 Пример использования:
-~~~
-[php]
+~~~php
 $node=Category::model()->findByPk(10);
 $node->moveAsRoot();
 ~~~
@@ -354,8 +339,7 @@ $node->moveAsRoot();
 Для этого в поведении присутствуют методы `isRoot()`, `isLeaf()`, `isDescendantOf()`.
 
 Пример использования:
-~~~
-[php]
+~~~php
 $root=Category::model()->findByPk(1);
 CVarDumper::dump($root->isRoot()); //true;
 CVarDumper::dump($root->isLeaf()); //false;
@@ -372,8 +356,7 @@ CVarDumper::dump($node->isDescendantOf($samsung)); //true;
 
 ### Обход дерева без рекурсии
 
-~~~
-[php]
+~~~php
 $level=0;
 
 foreach($categories as $n=>$category)
