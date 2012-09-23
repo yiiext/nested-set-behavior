@@ -152,7 +152,7 @@ Category::model()->findAll(array('order'=>'lft'));
 For multiple trees per table:
 
 ```php
-Category::model()->findAll(array('condition'=>'root_id=?','order'=>'lft'),array($root_id));
+Category::model()->findAll(array('condition'=>'root=?','order'=>'lft'),array($root_id));
 ```
 
 Modifying a tree
