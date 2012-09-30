@@ -18,6 +18,7 @@ public function behaviors()
             'leftAttribute'=>'lft',
             'rightAttribute'=>'rgt',
             'levelAttribute'=>'level',
+            'hasManyRoots'=>false,
         ),
     );
 }
@@ -37,8 +38,9 @@ matching field names in default DB schemas so you can skip configuring these.
 
 There are two ways this behavior can work: one tree per table and multiple trees
 per table. The mode is selected based on the value of `hasManyRoots` option that
-is `false` by default meaning single tree mode. In multiple trees mode you can
-set `rootAttribute` option to match existing field in the table storing the tree.
+is `false` by default meaning single tree mode (be sure to set it to `true` if 
+that's your case). In multiple trees mode you can set `rootAttribute` option to
+match existing field in the table storing the tree.
 
 Selecting from a tree
 ---------------------
@@ -382,3 +384,16 @@ for($i=$level;$i;$i--)
 	echo CHtml::closeTag('ul')."\n";
 }
 ```
+
+Database schema notes
+------------
+
+Using this behavior means integrating its schema into your model's schema. Here are a few
+extra words on the meaning of less obvious columns in schema.sql and schema_with_many_roots.sql.
+They can be useful when you need to feed in sample models into the DB, for example.
+- `level`: Symbols the 'level' of the node in the tree, starting from 1. This means that 
+ root node(s) will have value of '1' for this column. Their child (!= descendants...) will have a 
+ value of '2' and so on.
+- `root`: This is a a-la foreign key to the id of the root of the tree. For root nodes, this would be
+ equal to the same node's 'id' column value. For leaf nodes, in whatever depth/level, this column 
+ should contain the value of the root node's 'id' column. 
