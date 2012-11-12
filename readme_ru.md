@@ -111,7 +111,7 @@ $descendants=$category->children()->findAll();
 
 ~~~php
 $category=Category::model()->findByPk(5);
-$descendants=$category->ancestors()->findAll();
+$ancestors=$category->ancestors()->findAll();
 ~~~
 
 Результат:
