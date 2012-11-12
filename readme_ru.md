@@ -57,7 +57,7 @@ public function behaviors()
 	- 3. Samsung
 		- 4. X100
 		- 5. C200
-		- 6. Motorola
+	- 6. Motorola
 - 7. Cars
 	- 8. Audi
 	- 9. Ford
