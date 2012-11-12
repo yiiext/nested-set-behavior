@@ -352,6 +352,9 @@ Useful code
 ### Non-recursive tree traversal
 
 ```php
+$criteria=new CDbCriteria;
+$criteria->order='t.lft'; // or 't.root, t.lft' for multiple trees
+$categories=Category::model()->findAll($criteria);
 $level=0;
 
 foreach($categories as $n=>$category)
