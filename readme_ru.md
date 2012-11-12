@@ -357,6 +357,9 @@ CVarDumper::dump($node->isDescendantOf($samsung)); //true;
 ### Обход дерева без рекурсии
 
 ~~~php
+$criteria=new CDbCriteria;
+$criteria->order='t.lft'; // или 't.root, t.lft' для множественных деревьев
+$categories=Category::model()->findAll($criteria);
 $level=0;
 
 foreach($categories as $n=>$category)
