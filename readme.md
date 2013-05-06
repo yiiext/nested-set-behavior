@@ -4,6 +4,8 @@ Nested Set
 This extension allows managing trees stored in database as nested sets.
 It's implemented as Active Record behavior.
 
+Nested Set behavior 2 for Yii 2 preview version: https://github.com/creocoder/nested-set-behavior-2
+
 Installing and configuring
 --------------------------
 
