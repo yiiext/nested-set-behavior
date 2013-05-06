@@ -5,6 +5,8 @@ Nested Set
 вложенных множеств. Реализация компонента выполнена в виде поведения для
 Active Record моделей.
 
+Nested Set behavior 2 для Yii 2 preview версия: https://github.com/creocoder/nested-set-behavior-2
+
 Установка и настройка
 ---------------------
 
