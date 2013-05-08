@@ -10,7 +10,7 @@
     ],
     "minimum-stability": "dev",
     "require": {
-	"php": ">=5.1.0",
-	"yiisoft/yii": "master"
+        "php": ">=5.1.0",
+        "yiisoft/yii": "master"
     }
 }
