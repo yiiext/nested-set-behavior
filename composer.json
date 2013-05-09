@@ -1,6 +1,9 @@
 {
     "name": "yiiext/nested-set-behavior",
     "description": "AR models behavior that allows to work with nested sets tree.",
+    "keywords": ["yii", "extension", "nested-set"],
+    "homepage": "https://github.com/yiiext/nested-set-behavior",
+    "type": "yii-extension",
     "license": "BSD-3-Clause",
     "authors": [
         {
