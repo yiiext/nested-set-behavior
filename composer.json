@@ -1,0 +1,16 @@
+{
+    "name": "yiiext/nested-set-behavior",
+    "description": "AR models behavior that allows to work with nested sets tree.",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Alexander Kochetov",
+            "email": "creocoder@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.1.0",
+        "yiisoft/yii": "master"
+    }
+}
