@@ -57,7 +57,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 
 	/**
 	 * Named scope. Gets children for node (direct descendants only).
-	 * @return CActiveRecord the owner.
+	 * @return ZCActiveRecord the owner.
 	 */
 	public function children()
 	{
@@ -172,6 +172,22 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			$criteria->params[CDbCriteria::PARAM_PREFIX.CDbCriteria::$paramCount++]=$owner->{$this->rootAttribute};
 		}
 
+		return $owner;
+	}
+
+	/**
+	 * Named scope. Gets ajar (partialy opened tree) for node.
+	 * @return CActiveRecord the owner.
+	 */
+	public function ajar()
+	{
+		$owner=$this->getOwner();
+		$ancestors=$owner->ancestors()->findAll();
+		$criteria=$owner->children()->getDbCriteria();
+		
+		foreach ($ancestors as &$node)
+			$criteria->addCondition($node->children()->getDbCriteria()->condition,'OR');
+		
 		return $owner;
 	}
 
