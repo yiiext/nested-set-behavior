@@ -451,7 +451,11 @@ class NestedSetBehavior extends CActiveRecordBehavior
 			$this->shiftLeftRight($right+1,$left-$right-1);
 
 			if(isset($transaction))
+			{
 				$transaction->commit();
+				$owner->onAfterSave($owner);
+			}
+				
 
 			$this->correctCachedOnMoveBetweenTrees(1,$levelDelta,$owner->getPrimaryKey());
 		}
@@ -800,7 +804,11 @@ class NestedSetBehavior extends CActiveRecordBehavior
 				$this->shiftLeftRight($right+1,$left-$right-1);
 
 				if(isset($transaction))
+				{
 					$transaction->commit();
+					$owner->onAfterSave($owner);
+				}	
+					
 
 				$this->correctCachedOnMoveBetweenTrees($key,$levelDelta,$target->{$this->rootAttribute});
 			}
@@ -843,7 +851,10 @@ class NestedSetBehavior extends CActiveRecordBehavior
 				$this->shiftLeftRight($right+1,-$delta);
 
 				if(isset($transaction))
+				{
 					$transaction->commit();
+					$owner->onAfterSave($owner);
+				}	
 
 				$this->correctCachedOnMoveNode($key,$levelDelta);
 			}
