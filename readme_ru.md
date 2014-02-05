@@ -1,7 +1,7 @@
 Nested Set
 ==========
 
-Nested Set behavior для Yii 2: https://github.com/creocoder/yii2-nested-set
+Nested Set behavior для Yii 2: https://github.com/creocoder/yii2-nested-set-behavior
 
 Этот компонент предназначен для работы с деревьями, которые хранятся в виде
 вложенных множеств. Реализация компонента выполнена в виде поведения для
