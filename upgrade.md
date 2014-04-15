@@ -24,5 +24,5 @@ to
 ~~~
 $parent=$node->parent()->find();
 $prevSibling=$node->prev()->find();
-$nextSibling=$node->next()->fint();
+$nextSibling=$node->next()->find();
 ~~~
