@@ -14,7 +14,7 @@
     "minimum-stability": "dev",
     "autoload" : {
         "classmap" : ["NestedSetBehavior.php"]
-    }
+    },
     "require": {
         "php": ">=5.1.0"
     }
