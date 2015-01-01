@@ -1,7 +1,7 @@
 Nested Set
 ==========
 
-Nested Set behavior for Yii 2: https://github.com/creocoder/yii2-nested-set-behavior
+Nested Set behavior for Yii 2: https://github.com/creocoder/yii2-nested-sets
 
 This extension allows managing trees stored in database as nested sets.
 It's implemented as Active Record behavior.
