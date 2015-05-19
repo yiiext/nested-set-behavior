@@ -19,6 +19,7 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	public $leftAttribute='lft';
 	public $rightAttribute='rgt';
 	public $levelAttribute='level';
+	public $allowSaveAndDelete=false;
 	private $_ignoreEvent=false;
 	private $_deleted=false;
 	private $_id;
@@ -549,6 +550,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function beforeSave($event)
 	{
+		if($this->allowSaveAndDelete)
+			return true;
 		if($this->_ignoreEvent)
 			return true;
 		else
@@ -563,6 +566,8 @@ class NestedSetBehavior extends CActiveRecordBehavior
 	 */
 	public function beforeDelete($event)
 	{
+		if($this->allowSaveAndDelete)
+			return true;
 		if($this->_ignoreEvent)
 			return true;
 		else
